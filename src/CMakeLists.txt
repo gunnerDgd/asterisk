@@ -1,4 +1,5 @@
 add_subdirectory(details/base)
+add_subdirectory(details/env)
 add_library     (asterisk STATIC
     file.h
     file.c

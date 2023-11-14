@@ -1,6 +1,8 @@
 #include "io_sched.h"
 #include "io_res.h"
 
+#include <stdio.h>
+
 obj_trait __io_sched_trait				    = {
 	.init		   = &__io_sched_init		  ,
 	.init_as_clone = &__io_sched_init_as_clone,
@@ -56,12 +58,13 @@ void
 				void *ret_key = par;
 
 				while(GetQueuedCompletionStatus(par->hnd, &ret_bytes, &ret_key, &ret, 1)) {
-					__io_res* res      = ret - offsetof(__io_res, hnd);
-							  res->ret = ret_bytes			 ;
-							  res->state = __io_res_completed;
-					
-					if(res->state == __io_res_pending)
+					__io_res* res = ret - offsetof(__io_res, hnd);
+
+					if(res->state == __io_res_pending) {
+						res->ret   = ret_bytes		   ;
+						res->state = __io_res_completed;
 						resm(res->task);
+					}
 				}
 			}
 }

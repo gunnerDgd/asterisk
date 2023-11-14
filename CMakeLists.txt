@@ -1,10 +1,6 @@
 project(asterisk-all)
 set    (CMAKE_C_STANDARD 11)
 
-set(PRESET_X86_64   ON)
-set(PRESET_X86     OFF)
-set(PRESET_AARCH64 OFF)
-
 set                    (PRESET_ENV_CSTD ON)
 add_compile_definitions(PRESET_ENV_CSTD)
 

@@ -20,10 +20,10 @@ void
 			par->state = __task_state_stop		    ;
 			
 			if (par->ret_await) {
-				it exec = list_push_back(&par->sched->exec, par->ret_await);
-						  list_pop_at   (&par->sched->susp, &par->sched_it);
+				it exec = list_push_back(&par->sched->exec,  par->ret_await)		  ;
+						  list_pop_at   (&par->sched->susp, &par->ret_await->sched_it);
 
-				par->sched_it = exec;
+				par->ret_await->sched_it = exec;
 			}
 
 			cpu_switch(&par->cpu, &par->sched->cpu);
@@ -99,10 +99,7 @@ void*
 			par->sched->curr->state = __task_state_susp;
 			
 			cpu_switch(&par->sched->curr->cpu, &par->sched->cpu);
-			void*  ret = par->ret	      ;
-					     par->sched = 0   ;
-
-			return ret;
+			return par->ret;
 }
 
 void  

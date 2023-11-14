@@ -1,12 +1,12 @@
 #include "io_res.h"
 #include "io_sched.h"
 
-obj_trait __io_res_trait		 = {
-	.init		   = 0			   ,
-	.init_as_clone = 0			   ,
-	.init_as_ref   = 0			   ,
-	.deinit		   = 0			   ,
-	.name		   = 0			   ,
+obj_trait __io_res_trait				  = {
+	.init		   = &__io_res_init			,
+	.init_as_clone = &__io_res_init_as_clone,
+	.init_as_ref   = 0					    ,
+	.deinit		   = &__io_res_deinit 	    ,
+	.name		   = 0					    ,
 	.size		   = __io_res_size,
 };
 
@@ -22,6 +22,7 @@ bool_t
 				return false_t;
 			}
 
+			memset(&par_res->hnd, 0x00, sizeof(OVERLAPPED));
 			return true_t;
 }
 
@@ -39,7 +40,7 @@ void
 }
 
 u64_t  
-	__io_res_size() {
+	__io_res_size()			   {
 		return sizeof(__io_res);
 }
 
