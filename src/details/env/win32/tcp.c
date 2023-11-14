@@ -56,16 +56,17 @@ u64_t
 task*
 	__tcp_conn
 		(__tcp* par, const char* par_v4, u16_t par_port) {
-			__io_res*		   res      = make(&__io_res_trait) from(1, par->io_sched);
-			struct sockaddr_in ret_addr = {
-				.sin_addr			    = { .S_un.S_addr = inet_addr(par_v4) },
-				.sin_family				= AF_INET							  ,
-				.sin_port				= htons(par_port)
-			};
+			__io_res* res = make(&__io_res_trait) from(1, par->io_sched);
+			if (!res)
+				return false_t;
+
+			par->v4.host.sin_addr.s_addr = inet_addr(par_v4)  ;
+			par->v4.host.sin_port		 = htons    (par_port);
+			par->v4.host.sin_family		 = AF_INET			  ;
 
 			bool_t ret = ConnectEx		  (
 				par->tcp				  ,
-				&ret_addr				  ,
+				&par->v4.host			  ,
 				sizeof(struct sockaddr_in),
 				0						  ,
 				0						  ,
@@ -92,13 +93,16 @@ task*
 
 task*
 	__tcp_send
-		(__tcp* par, mem par_buf, u64_t par_len) {
-			if(par_len > mem_size(par_buf))
+		(__tcp* par, ptr par_buf, u64_t par_len) {
+			if(par_len > ptr_size(par_buf))
 				return 0;
 
-			__io_res* res     = make(&__io_res_trait) from(1, par->io_sched);
-			WSABUF    ret_buf =			        { 
-				.buf = ptr_raw(mem_ptr(par_buf)), 
+			__io_res* res = make(&__io_res_trait) from(1, par->io_sched);
+			if (!res)
+				return false_t;
+
+			WSABUF ret_buf =		   {
+				.buf = ptr_raw(par_buf),
 				.len = par_len 
 			};
 
@@ -112,13 +116,16 @@ task*
 
 task*
 	__tcp_recv
-		(__tcp* par, mem par_buf, u64_t par_len) {
-			if(par_len > mem_size(par_buf))
+		(__tcp* par, ptr par_buf, u64_t par_len) {
+			if(par_len > ptr_size(par_buf))
 				return 0;
 
-			__io_res *res     = make(&__io_res_trait) from(1, par->io_sched);
-			WSABUF    ret_buf =			 	    {
-				.buf = ptr_raw(mem_ptr(par_buf)),
+			__io_res *res = make(&__io_res_trait) from(1, par->io_sched);
+			if (!res)
+				return false_t;
+
+			WSABUF ret_buf =		   {
+				.buf = ptr_raw(par_buf),
 				.len = par_len 
 			};
 

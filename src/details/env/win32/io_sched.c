@@ -23,7 +23,7 @@ bool_t
 			
 			if (par_sched->hnd == INVALID_HANDLE_VALUE) 
 				return false_t;
-			if (!par_alloc)								
+			if (!par_alloc)
 				return false_t;
 
 			return make_at(par_sched->sched, sched_t) from(1, par_alloc);

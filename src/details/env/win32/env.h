@@ -1,9 +1,10 @@
 #ifndef __ENV_WIN32_ENV_H__
 #define __ENV_WIN32_ENV_H__
 
-#include <Windows.h>
 #include <WinSock2.h>
+#include <Windows.h>
 #include <MSWSock.h>
+#include <WS2tcpip.h>
 
 #include "../../base/type.h"
 

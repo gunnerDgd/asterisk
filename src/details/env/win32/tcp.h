@@ -8,6 +8,10 @@ typedef struct   __tcp        {
 	obj			head    ;
 	__io_sched* io_sched;
 	SOCKET	    tcp	    ;
+	union				{
+	struct { struct sockaddr_in  host, peer; } v4;
+	struct { struct sockaddr_in6 host, peer; } v6;
+	};
 }	__tcp;
 
 bool_t __tcp_init		  (__tcp*, u32_t, va_list);
@@ -18,7 +22,7 @@ u64_t  __tcp_size		  ()					  ;
 task* __tcp_conn (__tcp*, const char*, u16_t);
 task* __tcp_close(__tcp*);
 
-task* __tcp_send (__tcp*, mem, u64_t);
-task* __tcp_recv (__tcp*, mem, u64_t);
+task* __tcp_send (__tcp*, ptr, u64_t);
+task* __tcp_recv (__tcp*, ptr, u64_t);
 
 #endif

@@ -39,6 +39,8 @@ if   (PRESET_X86_64)
     set                  (CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -o <OBJECT> <SOURCE>")
     add_compile_options  ("$<$<COMPILE_LANGUAGE:ASM_NASM>:-f $<IF:$<BOOL:$<TARGET_PROPERTY:NASM_OBJ_FORMAT>>, \ $<TARGET_PROPERTY:NASM_OBJ_FORMAT>, ${CMAKE_ASM_NASM_OBJECT_FORMAT}>>")
 
+    message("Enabled NASM Compilation Option (x86_64)")
+
     if    (PRESET_COMPILER_GCC)
             add_library          (build-arch-asm details-arch/x86_64/asm/atomic_gcc.asm)
             set_target_properties(build-arch-asm PROPERTIES NASM_OBJ_FORMAT elf64)

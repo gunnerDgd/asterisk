@@ -45,9 +45,11 @@ u64_t
 
 void* 
 	__io_res_main
-		(task* par, __io_res* par_res) {
-			if(par_res->state == __io_res_idle)  {
-				par_res->state = __io_res_pending;
+		(task* par, __io_res* par_res)			  {
+			if (par_res->state == __io_res_pending)
+				return 0;
+			if (par_res->state == __io_res_idle)  {
+				par_res->state  = __io_res_pending;
 				susp(par_res->task);
 			}
 
