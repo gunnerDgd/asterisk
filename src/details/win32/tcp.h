@@ -8,9 +8,22 @@ typedef struct   __tcp        {
 	obj			head    ;
 	__io_sched* io_sched;
 	SOCKET	    tcp	    ;
-	union				{
-	struct { struct sockaddr_in  host, peer; } v4;
-	struct { struct sockaddr_in6 host, peer; } v6;
+	HANDLE		tcp_iocp;
+	union							   {
+	struct							   { 
+		struct sockaddr_in host		   ;
+		u8_t			   host_pad[16];
+		
+		struct sockaddr_in peer		   ; 
+		u8_t			   peer_pad[16];
+	}   v4;
+	struct							    { 
+		struct sockaddr_in6 host		;
+		u8_t			    host_pad[16];
+		
+		struct sockaddr_in6 peer		;
+		u8_t				peer_pad[16]; 
+	}   v6;
 	};
 }	__tcp;
 

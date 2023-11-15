@@ -16,6 +16,7 @@ bool_t
 			par_res->io_sched = ref(va_arg(par, __io_sched*));
 			if (!par_res->io_sched)
 				return false_t;
+
 			task* curr = sched_curr(&par_res->io_sched->sched);
 			if(!curr)				  {
 				del(par_res->io_sched);
@@ -29,6 +30,7 @@ bool_t
 			}
 
 			memset(&par_res->hnd, 0x00, sizeof(OVERLAPPED));
+			par_res->ret			=			  0;
 			par_res->state		    = __io_res_idle;
 			par_res->hnd.Offset     = -1;
 			par_res->hnd.OffsetHigh = -1;

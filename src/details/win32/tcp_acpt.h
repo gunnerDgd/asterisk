@@ -7,6 +7,7 @@ extern obj_trait __tcp_acpt_trait;
 typedef struct   __tcp_acpt      {
 	obj			head		  ;
 	SOCKET      tcp			  ;
+	HANDLE		tcp_iocp	  ;
 	__io_sched* io_sched	  ;
 	union				      {
 		struct sockaddr_in  v4;

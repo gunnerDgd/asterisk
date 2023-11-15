@@ -38,9 +38,7 @@ bool_t
 			NULL
 		);
 
-		if (ret)								goto __env_init_failed;
-		if (ret_size != sizeof(LPFN_CONNECTEX)) goto __env_init_failed;
-
+		if (ret) goto __env_init_failed;
 		ret = WSAIoctl						  (
 			env								  ,
 			SIO_GET_EXTENSION_FUNCTION_POINTER,
@@ -53,9 +51,7 @@ bool_t
 			NULL
 		);
 
-		if (ret)								goto __env_init_failed;
-		if (ret_size != sizeof(LPFN_CONNECTEX)) goto __env_init_failed;
-
+		if (ret) goto __env_init_failed;
 		return true_t;
 	__env_init_failed:
 		WSACleanup  ()	 ;

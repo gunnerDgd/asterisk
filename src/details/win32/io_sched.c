@@ -49,21 +49,20 @@ u64_t
 
 void
 	__io_sched_run
-		(__io_sched* par)				  {
-			while(sched_run(&par->sched)) {
-				u8_t *ret		   ;
-				DWORD ret_bytes    ;
-				void *ret_key = par;
+		(__io_sched* par)	   {
+			u8_t *ret		   ;
+			DWORD ret_bytes    ;
+			void *ret_key = par;
 
-				while(GetQueuedCompletionStatus(par->hnd, &ret_bytes, &ret_key, &ret, 1)) {
-					__io_res* res = ret - offsetof(__io_res, hnd);
-
-					if(res->state == __io_res_pending) {
-						res->ret   = ret_bytes		   ;
-						res->state = __io_res_completed;
-						resm(res->task);
-					}
+			while(sched_run(&par->sched))											  {
+			while(GetQueuedCompletionStatus(par->hnd, &ret_bytes, &ret_key, &ret, 1)) {
+				__io_res* res = ret - offsetof(__io_res, hnd);
+				if(res->state == __io_res_pending)				  {
+					res->ret   = (res->ret) ? res->ret : ret_bytes;
+					res->state = __io_res_completed;
+					resm(res->task);
 				}
+			}
 			}
 }
 

@@ -1,5 +1,8 @@
 project    (asterisk)
 add_library(asterisk STATIC
+    env.h
+    env.c
+
     file.h
     file.c
 
@@ -39,6 +42,7 @@ if(PRESET_WIN32)
         details/win32/env.h
         details/win32/env.c
 
+        details/env.h
         details/file.h
         details/io_sched.h
         details/tcp.h
