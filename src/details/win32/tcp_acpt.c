@@ -19,25 +19,11 @@ bool_t
 			if (!par_acpt->io_sched)
 				return false_t;
 
-			par_acpt->tcp = WSASocket (
-				AF_INET			   ,
-				SOCK_STREAM		   ,
-				IPPROTO_TCP		   ,
-				0				   ,
-				0				   ,
-				WSA_FLAG_OVERLAPPED
-			);
-
+			par_acpt->tcp = WSASocket (AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, WSA_FLAG_OVERLAPPED);
 			if (par_acpt->tcp == INVALID_SOCKET)
 				return false_t;
 
-			par_acpt->tcp_iocp = CreateIoCompletionPort (
-				par_acpt->tcp		  ,
-				par_acpt->io_sched->hnd,
-				par_acpt->io_sched	  ,
-				0
-			);
-
+			par_acpt->tcp_iocp = CreateIoCompletionPort (par_acpt->tcp, par_acpt->io_sched->hnd, par_acpt->io_sched, 0);
 			if(!par_acpt->tcp_iocp)		 {
 				closesocket(par_acpt->tcp);
 				return false_t;

@@ -48,12 +48,11 @@ u64_t
 task*
 	__tcp_conn
 		(__tcp* par, const char* par_v4, u16_t par_port) {
-			if(par->tcp != INVALID_SOCKET)
-				return 0;
-			
-			par->tcp = WSASocket(AF_INET, SOCK_STREAM, 0, 0, 0, WSA_FLAG_OVERLAPPED);
-			if (par->tcp == INVALID_SOCKET)
-				return 0;
+			if(par->tcp == INVALID_SOCKET) {
+				par->tcp = WSASocket(AF_INET, SOCK_STREAM, 0, 0, 0, WSA_FLAG_OVERLAPPED);
+				if (par->tcp == INVALID_SOCKET)
+					return 0;
+			}
 
 			par->tcp_iocp = CreateIoCompletionPort (par->tcp, par->io_sched->hnd, par->io_sched, 0);
 			if(!par->tcp_iocp)		 {
@@ -84,8 +83,10 @@ task*
 				&res->hnd
 			);
 
-			if (!ret && WSAGetLastError() != ERROR_IO_PENDING)
+			if (!ret && WSAGetLastError() != ERROR_IO_PENDING) {
+				del(res);
 				return 0;
+			}
 
 			return res->task;
 }
