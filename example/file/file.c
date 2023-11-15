@@ -5,26 +5,28 @@
 #include <stdlib.h>
 #include <string.h>
 
-void async_main(task* par_task, io_sched* par) {
+io_sched_main(par_task, par) {
     file* file_test = make(file_t) from(2, par, "test.txt");
-    mem   buf       = mem_init(0, 32); if (!buf) return;
-    ptr   ptr       = mem_ptr (buf);
+    mem   buf       = mem_init(0, 32) ; if (!buf) return;
+    ptr   ptr       = mem_ptr (buf, 0);
 
     if (!file_create(file_test)) {
     if (!file_open  (file_test))
         return false_t;
     }
 
-    ptr_write(ptr, "Hello World\n", 12); 
-    printf   ("Written %lld bytes\n", (u64_t)await(file_write(file_test, ptr, 12)));
-    printf   ("Written %lld bytes\n", (u64_t)await(file_write(file_test, ptr, 12)));
-    printf   ("Written %lld bytes\n", (u64_t)await(file_write(file_test, ptr, 12)));
-}
+    ptr_write(ptr, "Hello World\n", 12);
+    task *task_1 = file_write(file_test, ptr, 12),
+         *task_2 = file_write(file_test, ptr, 12),
+         *task_3 = file_write(file_test, ptr, 12);
 
-int main() {
-    io_sched *sched     = make(io_sched_t) from(0);
-    task     *main_task = make(task_t)     from(2, async_main, sched);
+    printf   ("Written %lld bytes\n", (u64_t)await(task_1));
+    printf   ("Written %lld bytes\n", (u64_t)await(task_2));
+    printf   ("Written %lld bytes\n", (u64_t)await(task_3));
 
-    io_sched_dispatch(sched, main_task);
-    io_sched_run     (sched)           ;
+    del(task_1);
+    del(task_2);
+    del(task_3);
+
+    return 0;
 }

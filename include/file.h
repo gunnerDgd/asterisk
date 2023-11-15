@@ -1,8 +1,8 @@
 #ifndef __FILE_H__
 #define __FILE_H__
 
-#include "sched.h"
-#include "task.h"
+#include "details/base/sched.h"
+#include "details/base/task.h"
 
 extern obj_trait* file_t;
 typedef struct    file { u8_t file[256]; } file;

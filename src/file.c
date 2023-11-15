@@ -1,5 +1,5 @@
 #include "file.h"
-#include "details/env/file.h"
+#include "details/file.h"
 
 obj_trait* file_t = &__file_trait;
 

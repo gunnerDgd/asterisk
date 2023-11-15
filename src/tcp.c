@@ -1,5 +1,5 @@
 #include "tcp.h"
-#include "details/env/tcp.h"
+#include "details/tcp.h"
 
 obj_trait* tcp_t = &__tcp_trait;
 
