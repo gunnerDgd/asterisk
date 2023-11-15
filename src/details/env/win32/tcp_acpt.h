@@ -17,6 +17,7 @@ typedef struct   __tcp_acpt      {
 bool_t __tcp_acpt_init		   (__tcp_acpt*, u32_t, va_list);
 bool_t __tcp_acpt_init_as_clone(__tcp_acpt*,  __tcp_acpt*)  ;
 void   __tcp_acpt_deinit	   (__tcp_acpt*)				;
+u64_t  __tcp_acpt_size		   ()							;
 
 bool_t __tcp_acpt_conn		   (__tcp_acpt*, const char*, u16_t);
 void   __tcp_acpt_close		   (__tcp_acpt*)					;

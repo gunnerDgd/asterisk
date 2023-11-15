@@ -14,6 +14,10 @@ bool_t
 	__tcp_init
 		(__tcp* par_tcp, u32_t par_count, va_list par) {
 			i32_t ret, ret_size;
+
+			if (env == INVALID_SOCKET)
+				if (!__env_init()) return false_t;
+
 			par_tcp->io_sched = ref		  (va_arg(par, __io_sched*));
 			par_tcp->tcp	  = WSASocket (
 				AF_INET			   ,

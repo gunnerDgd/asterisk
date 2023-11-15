@@ -16,9 +16,9 @@ void async_main(task* par_task, io_sched* par) {
     }
 
     ptr_write(ptr, "Hello World\n", 12); 
-    printf("Written %lld bytes\n", (u64_t)await(file_write(file_test, ptr, 12)));
-    printf("Written %lld bytes\n", (u64_t)await(file_write(file_test, ptr, 12)));
-    printf("Written %lld bytes\n", (u64_t)await(file_write(file_test, ptr, 12)));
+    printf   ("Written %lld bytes\n", (u64_t)await(file_write(file_test, ptr, 12)));
+    printf   ("Written %lld bytes\n", (u64_t)await(file_write(file_test, ptr, 12)));
+    printf   ("Written %lld bytes\n", (u64_t)await(file_write(file_test, ptr, 12)));
 }
 
 int main() {

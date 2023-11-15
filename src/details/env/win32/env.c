@@ -4,15 +4,15 @@ LPFN_CONNECTEX    ConnectEx							   ;
 GUID			  ConnectExGuid    = WSAID_CONNECTEX   ;
 LPFN_DISCONNECTEX DisconnectEx						   ;
 GUID			  DisconnectExGuid = WSAID_DISCONNECTEX;
-WSADATA			  EnvInfo							   ;
-SOCKET			  Env			   = INVALID_SOCKET    ;
+WSADATA			  env_info							   ;
+SOCKET			  env			   = INVALID_SOCKET    ;
 
 bool_t
 	__env_init()							 	{
-		if(WSAStartup(MAKEWORD(2, 2), &EnvInfo))
+		if(WSAStartup(MAKEWORD(2, 2), &env_info))
 			return false_t;
 
-		Env = WSASocketW	   (
+		env = WSASocketW	   (
 			AF_INET			   ,
 			SOCK_STREAM		   ,
 			IPPROTO_TCP		   ,
@@ -21,13 +21,13 @@ bool_t
 			WSA_FLAG_OVERLAPPED
 		);
 
-		if (Env == INVALID_SOCKET)
+		if (env == INVALID_SOCKET)
 			goto __env_init_failed;
 
 		u64_t ret_size;
 		i32_t ret     ;
 		ret = WSAIoctl						  (
-			Env								  ,
+			env								  ,
 			SIO_GET_EXTENSION_FUNCTION_POINTER,
 			&ConnectExGuid					  ,
 			sizeof(GUID)					  ,
@@ -42,7 +42,7 @@ bool_t
 		if (ret_size != sizeof(LPFN_CONNECTEX)) goto __env_init_failed;
 
 		ret = WSAIoctl						  (
-			Env								  ,
+			env								  ,
 			SIO_GET_EXTENSION_FUNCTION_POINTER,
 			&DisconnectExGuid				  ,
 			sizeof(GUID)					  ,
@@ -58,13 +58,13 @@ bool_t
 
 		return true_t;
 	__env_init_failed:
-		WSACleanup  ()		 ;
-		closesocket (Env);
+		WSACleanup  ()	 ;
+		closesocket (env);
 		return false_t;
 }
 
 void
 	__env_deinit()		{
-		closesocket(Env);
+		closesocket(env);
 		WSACleanup ()	;
 }

@@ -3,9 +3,21 @@
 
 #include "io_res.h"
 
+obj_trait __tcp_acpt_trait					= {
+	.init		   = &__tcp_acpt_init		  ,
+	.init_as_clone = &__tcp_acpt_init_as_clone,
+	.init_as_ref   =						 0,
+	.deinit		   = &__tcp_acpt_deinit		  ,
+	.name		   =						 0,
+	.size		   = &__tcp_acpt_size
+};
+
 bool_t 
 	__tcp_acpt_init
 		(__tcp_acpt* par_acpt, u32_t par_count, va_list par)         {
+			if (env == INVALID_SOCKET)
+				if (!__env_init()) return false_t;
+
 			par_acpt->io_sched = ref	   (va_arg(par, __io_sched*));
 			par_acpt->tcp	   = WSASocket (
 				AF_INET			   ,
@@ -37,6 +49,11 @@ void
 			del		   (par->io_sched);
 }
 
+u64_t
+	__tcp_acpt_size() {
+		return sizeof(__tcp_acpt);
+}
+
 bool_t 
 	__tcp_acpt_conn
 		(__tcp_acpt* par, const char* par_v4, u16_t par_port) {
@@ -61,7 +78,7 @@ void
 
 task* 
 	__tcp_acpt_run
-		(__tcp_acpt* par) {
+		(__tcp_acpt* par)											   {
 			__tcp *ret_tcp = make (&__tcp_trait) from(1, par->io_sched);
 			if   (!ret_tcp)
 				return false_t;

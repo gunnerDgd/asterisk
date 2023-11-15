@@ -12,6 +12,8 @@ extern LPFN_CONNECTEX    ConnectEx       ;
 extern GUID			     ConnectExGuid   ;
 extern LPFN_DISCONNECTEX DisconnectEx    ;
 extern GUID				 DisconnectExGuid;
+extern WSADATA			 env_info        ;
+extern SOCKET			 env             ;
 
 bool_t __env_init  ();
 void   __env_deinit();
