@@ -8,6 +8,9 @@ add_library(asterisk STATIC
 
     io_sched.h
     io_sched.c
+
+    v4.h
+    v4.c
     
     tcp_acpt.h
     tcp_acpt.c
@@ -30,6 +33,9 @@ if(PRESET_WIN32)
         details/win32/io_res.h
         details/win32/io_res.c
 
+        details/win32/v4.h
+        details/win32/v4.c
+
         details/win32/tcp_acpt.h
         details/win32/tcp_acpt.c
 
@@ -43,6 +49,7 @@ if(PRESET_WIN32)
         details/win32/env.c
 
         details/env.h
+        details/v4.h
         details/file.h
         details/io_sched.h
         details/tcp.h

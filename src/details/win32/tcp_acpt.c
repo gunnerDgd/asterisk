@@ -53,12 +53,8 @@ u64_t
 
 bool_t 
 	__tcp_acpt_conn
-		(__tcp_acpt* par, const char* par_v4, u16_t par_port) {
-			par->v4.sin_addr.s_addr = inet_addr(par_v4)  ;
-			par->v4.sin_port		= htons	   (par_port);
-			par->v4.sin_family	    = AF_INET			 ;
-
-			if (bind(par->tcp, &par->v4, sizeof(struct sockaddr_in)))
+		(__tcp_acpt* par, __v4* par_addr) {
+			if (bind(par->tcp, &par_addr->v4, sizeof(struct sockaddr_in)))
 				return false_t;
 			if (listen(par->tcp, -1))
 				return false_t;
@@ -87,7 +83,7 @@ task*
 			}
 
 			ret_tcp->tcp_iocp = CreateIoCompletionPort (ret_tcp->tcp, ret_tcp->io_sched->hnd, ret_tcp->io_sched, 0);
-			if(!ret_tcp->tcp_iocp)	 {
+			if(!ret_tcp->tcp_iocp)   {
 				closesocket(par->tcp);
 				return 0;
 			}

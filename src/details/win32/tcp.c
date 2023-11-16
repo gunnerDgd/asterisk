@@ -33,11 +33,11 @@ void
 	__tcp_deinit
 		(__tcp* par) {
 			task* ret = __tcp_close(par);
-			await(ret);
+			await(ret)			;
+			del  (ret)			;
+			del  (par->io_sched);
 
-			del		   (par->io_sched);
-			CloseHandle(par->tcp_iocp);
-			closesocket(par->tcp)     ;
+			closesocket(par->tcp);
 }
 
 u64_t
@@ -47,7 +47,7 @@ u64_t
 
 task*
 	__tcp_conn
-		(__tcp* par, const char* par_v4, u16_t par_port) {
+		(__tcp* par, __v4* par_v4) {
 			if(par->tcp == INVALID_SOCKET) {
 				par->tcp = WSASocket(AF_INET, SOCK_STREAM, 0, 0, 0, WSA_FLAG_OVERLAPPED);
 				if (par->tcp == INVALID_SOCKET)
@@ -70,9 +70,7 @@ task*
 			if (!res)
 				return 0;
 
-			par->v4.host.sin_addr.s_addr = inet_addr(par_v4)  ;
-			par->v4.host.sin_port		 = htons    (par_port);
-
+			par->v4.host	  = par_v4->v4;
 			bool_t ret = ConnectEx		  (
 				par->tcp				  ,
 				&par->v4.host			  ,
