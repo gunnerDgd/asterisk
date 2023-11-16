@@ -17,7 +17,7 @@ void    io_sched_dispatch(io_sched*, task*);
         task     *main_task = make(task_t)     from(3, 0, async_main, sched);\
                                                                              \
         io_sched_dispatch(sched, main_task);                                 \
-        while(true_t)io_sched_run     (sched)           ;                                 \
+        io_sched_run     (sched)           ;                                 \
                                                                              \
         del(main_task);                                                      \
         del(sched)    ;                                                      \
