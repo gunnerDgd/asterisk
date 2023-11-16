@@ -32,8 +32,8 @@ bool_t
 			memset(&par_res->hnd, 0x00, sizeof(OVERLAPPED));
 			par_res->ret			=			  0;
 			par_res->state		    = __io_res_idle;
-			par_res->hnd.Offset     = -1;
-			par_res->hnd.OffsetHigh = -1;
+			par_res->hnd.Offset     =			 -1;
+			par_res->hnd.OffsetHigh =			 -1;
 			return true_t;
 }
 

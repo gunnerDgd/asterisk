@@ -4,10 +4,11 @@
 #include "env.h"
 #include "io_sched.h"
 
-extern obj_trait __v4_trait;
-typedef struct   __v4      {
-    obj                head;
-    struct sockaddr_in v4  ;
+extern obj_trait __v4_trait   ;
+typedef struct   __v4         {
+    obj                head   ;
+    struct sockaddr_in v4     ;
+    u64_t              v4_size;
 }   __v4;
 
 bool_t __v4_init         (__v4*, u32_t, va_list);

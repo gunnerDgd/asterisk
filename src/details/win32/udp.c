@@ -17,8 +17,17 @@ bool_t
             if (!par_udp->io_sched)
                 return false_t;
 
-            par_udp->udp      = INVALID_SOCKET;
-            par_udp->udp_iocp = 0             ;
+            par_udp->udp = WSASocketW(AF_INET, SOCK_DGRAM, IPPROTO_UDP, 0, 0, WSA_FLAG_OVERLAPPED);
+            if (par_udp->udp == INVALID_SOCKET)
+                return false_t;
+
+            par_udp->udp_iocp = CreateIoCompletionPort(par_udp->udp, par_udp->io_sched->hnd, par_udp->io_sched, 0);
+            if (!par_udp->udp_iocp)          {
+                closesocket(par_udp->udp)    ;
+                par_udp->udp = INVALID_SOCKET;
+                
+                return false_t;
+            }
 
             return true_t;
 }
@@ -43,39 +52,18 @@ u64_t
 
 bool_t 
     __udp_conn
-        (__udp* par, __v4* par_v4)         {
-            if(par->udp == INVALID_SOCKET) {
-                par->udp = WSASocketW (AF_INET, SOCK_DGRAM, IPPROTO_UDP, 0, 0, 0);
-                if (par->udp == INVALID_SOCKET)
-                   return false_t;
-            }
-
-            par->udp_iocp = CreateIoCompletionPort(par->udp, par->udp_iocp, par->udp_iocp, 0);
-            if (!par->udp_iocp)          {
-                closesocket(par->udp)    ;
-                par->udp = INVALID_SOCKET;
-                
+        (__udp* par, __v4* par_v4)                                      {
+            if (bind(par->udp, &par_v4->v4, sizeof(struct sockaddr_in)))
                 return false_t;
-            }
-
-            if(bind(par->udp, &par_v4->v4, sizeof(struct sockaddr_in))) {
-                closesocket(par->udp)     ;
-                CloseHandle(par->udp_iocp);
-
-                par->udp      = INVALID_SOCKET;
-                par->udp_iocp = 0;
-
-                return false_t;
-            }
 
             return true_t;
 }
 
 void   
     __udp_close
-        (__udp* par)                  {
-            closesocket(par->udp)     ;
-            CloseHandle(par->udp_iocp);
+        (__udp* par)                      {
+            closesocket(par->udp)         ;
+            CloseHandle(par->udp_iocp)    ;
 
             par->udp      = INVALID_SOCKET;
             par->udp_iocp =              0;
@@ -181,15 +169,16 @@ task*
 				.len = par_len 
 			};
 
-			i32_t ret = WSARecvFrom       (
-                par->udp                  ,
-                &ret_buf                  ,
-                1                         ,
-                0                         ,
-                &ret_flag                 ,
-                &par_v4->v4               ,
-                sizeof(struct sockaddr_in),
-                &res->hnd                 , 
+            par_v4->v4_size = sizeof(struct sockaddr_in);
+			i32_t ret = WSARecvFrom (
+                par->udp            ,
+                &ret_buf            ,
+                1                   ,
+                0                   ,
+                &ret_flag           ,
+                &par_v4->v4         ,
+                &par_v4->v4_size    ,
+                &res->hnd           ,
                 0
             );
 

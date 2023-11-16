@@ -39,3 +39,31 @@ target_link_libraries(asterisk-example-tcp-cli PRIVATE
     ws2_32
     Mswsock
 )
+
+add_executable       (asterisk-example-udp udp/udp.c)
+target_link_libraries(asterisk-example-udp PRIVATE 
+    asterisk 
+    asterisk-env 
+    
+    build 
+    build-arch
+    build-arch-asm
+    build-preset 
+
+    ws2_32
+    Mswsock
+)
+
+add_executable       (asterisk-example-udp-cli udp/udp_cli.c)
+target_link_libraries(asterisk-example-udp-cli PRIVATE 
+    asterisk 
+    asterisk-env 
+    
+    build 
+    build-arch
+    build-arch-asm
+    build-preset 
+
+    ws2_32
+    Mswsock
+)
