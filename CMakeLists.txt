@@ -20,8 +20,8 @@ elseif(WIN32)
     add_compile_definitions(PRESET_WIN32)
 endif ()
 
-include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_SOURCE_DIR}/lib/crisp/include)
+include_directories(src)
+include_directories(lib/crisp/include)
 
 add_subdirectory   (lib)
 add_subdirectory   (src)
