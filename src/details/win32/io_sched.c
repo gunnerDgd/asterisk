@@ -1,73 +1,57 @@
 #include "io_sched.h"
-#include "io_res.h"
+#include "thd.h"
 
-obj_trait __io_sched_trait				    = {
-	.init		   = &__io_sched_init		  ,
-	.init_as_clone = &__io_sched_init_as_clone,
-	.init_as_ref   =						 0,
-	.deinit		   = &__io_sched_deinit		  ,
-	.name		   =						 0,
-	.size		   = &__io_sched_size
+obj_trait __io_sched_trait	    = {
+	.on_new	  = &__io_sched_new   ,
+	.on_clone = &__io_sched_clone ,
+	.on_ref   =				    0 ,
+	.on_del   = &__io_sched_del   ,
+	.size	  = sizeof(__io_sched)
 };
 
+void* 
+	__io_task_run(__io_task* par)								    {
+		__sched_susp(&__thd_curr()->sched, __thd_curr()->sched.curr);
+		u64_t ret = par->ret; mem_del(0, par);
+		return	    par->ret;
+}
+
 bool_t 
-	__io_sched_init
+	__io_sched_new
 		(__io_sched* par_sched, u32_t par_count, va_list par) {
-			alloc* par_alloc = (par_count == 0) ? get_alloc() : va_arg(par, alloc*);
-			par_sched->hnd   = CreateIoCompletionPort (
+			par_sched->io_sched = CreateIoCompletionPort (
 				INVALID_HANDLE_VALUE,
 				NULL				,
 				par_sched			,
 				0
 			);
-			
-			if (par_sched->hnd == INVALID_HANDLE_VALUE) 
-				return false_t;
-			if (!par_alloc)
-				return false_t;
 
-			return make_at(par_sched->sched, sched_t) from(1, par_alloc);
+			return par_sched->io_sched != 0;
 }
 
 bool_t 
-	__io_sched_init_as_clone
-		(__io_sched* par, __io_sched* par_clone) {
-			return false_t;
+	__io_sched_clone
+		(__io_sched* par, __io_sched* par_clone) { 
+			return false_t; 
 }
 
-void
-	__io_sched_deinit
-		(__io_sched* par)		    {
-			del		   (&par->sched);
-			CloseHandle (par->hnd)  ;
-}
-
-u64_t
-	__io_sched_size() { 
-		return sizeof(__io_sched);
+void   
+	__io_sched_del 
+		(__io_sched* par)			  { 
+			CloseHandle(par->io_sched); 
 }
 
 void
 	__io_sched_run
-		(__io_sched* par)	   {
-			u8_t *ret		   ;
-			DWORD ret_bytes    ;
-			void *ret_key = par;
+		(__io_sched* par)	          {
+			DWORD	    task_ret      ;
+			__io_sched *task_key = par;
+			__io_task  *task		  ;
+			 
+			while(GetQueuedCompletionStatus(par->io_sched, &task_ret, &task_key, &task, 1)) {
+				if(!task->ret) 
+					task->ret = task_ret;
 
-			while(sched_run(&par->sched))											  {
-			while(GetQueuedCompletionStatus(par->hnd, &ret_bytes, &ret_key, &ret, 1)) {
-				__io_res* res = ret - offsetof(__io_res, hnd);
-				if(res->state == __io_res_pending)				  {
-					res->ret   = (res->ret) ? res->ret : ret_bytes;
-					res->state = __io_res_completed;
-					resm(res->task);
-				}
+				__sched_resm(&__thd_curr()->sched, task->task);
 			}
-			}
-}
-
-void
-	__io_sched_dispatch
-		(__io_sched* par, task* par_task) {
-			sched_dispatch(&par->sched, par_task);
 }
