@@ -1,32 +1,27 @@
 #include "thd.h"
+#include "curr.h"
 
 #include <Windows.h>
-#include <process.h>
 
-__declspec(thread) __thd *thd = 0;
-
-obj_trait __thd_trait      = {
-    .on_new   = &__thd_new   ,
-    .on_clone = &__thd_clone ,
-    .on_ref   =            0 ,
-    .on_del   = &__thd_del   ,
+obj_trait __thd_trait     = {
+    .on_new   = &__thd_new  ,
+    .on_clone = &__thd_clone,
+    .on_ref   =            0,
+    .on_del   = &__thd_del  ,
     .size     = sizeof(__thd)
 };
 
-__thd*   
-    __thd_curr() {
-        return thd;
-}
-
 void
     __thd_main
-        (__thd* par) {
-            thd = par;
-            if (!make_at     (&par->sched, &__sched_trait)    from(0)) return false_t;
-            if (!make_at     (&par->sched, &__io_sched_trait) from(0)) return false_t;
-            if (!__sched_exec(&par->sched, par->func, par->func_arg))  return false_t;
+        (__thd* par)                                                             {
+            if (!make_at       (&par->sched   , sched_t)    from(0))       return;
+            if (!make_at       (&par->io_sched, io_sched_t) from(0))       return;
+            if (!sched_dispatch(&par->sched   , par->func, par->func_arg)) return;
 
-            while (__sched_run(&par->sched));
+            curr_thd = par;
+            while (sched_run(&par->sched))          {
+                while (io_sched_run(&par->io_sched));
+            }
 }
 
 bool_t
@@ -34,9 +29,8 @@ bool_t
         (__thd* par_thd, u32_t par_count, va_list par) {
             par_thd->func     = va_arg(par, void*);
             par_thd->func_arg = va_arg(par, void*);
-
-            par_thd->thd = _beginthreadex(0, 0, __thd_main, par_thd, 0, 0);
-            if (par_thd->thd == -1) {
+            par_thd->thd      = CreateThread(0, 0, __thd_main, par_thd, 0, 0);
+            if (par_thd->thd == INVALID_HANDLE_VALUE) {
                 del(&par_thd->sched);
                 return false_t;
             }

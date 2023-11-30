@@ -1,45 +1,34 @@
 #include "task.h"
+#include "sched.h"
 
 #include "details/sched.h"
 #include "details/task.h"
-#include "details/thd.h"
+#include "details/curr.h"
 
 task  
-    task_exec
-        (void (*par)(void*), void* par_arg)                     {
-            __thd   *thd       = __thd_curr(); if(!thd) return 0;
-            __sched *thd_sched = &thd->sched ;
+    task_run
+        (void (*par)(void*), void* par_arg) { 
+            if (!par)        return 0;
+            if (!curr_sched) return 0;
 
-            return __sched_exec(thd_sched, par, par_arg);
-}
-
-
-
-void  
-    task_resm
-        (task par)                           {
-            __thd   *thd       = __thd_curr(); if(!thd) return 0;
-            __sched *thd_sched = &thd->sched ;
-            __sched_resm(thd_sched, par);
-}
-
-void  
-    task_susp
-        (task par)                           {
-            __thd   *thd       = __thd_curr(); if(!thd) return 0;
-            __sched *thd_sched = &thd->sched ;
-            __sched_susp(thd_sched, par)     ;
+            return __sched_dispatch(curr_sched, par, par_arg);
 }
 
 void* 
-    task_wait (task par) { 
-        return __task_wait(par); 
+    task_wait(task par)          { 
+        if (!par)        return 0;
+        if (!curr_sched) return 0;
+
+        void*  ret = __task_wait(par); __task_free(par);
+        return ret;
 }
 
-void 
-    task_yield()                         {
-        __thd   *thd       = __thd_curr(); if(!thd) return 0;
-        __sched *thd_sched = &thd->sched ;
+void  
+    task_yield() { 
+        if(curr_sched) __task_yield(task_curr()); 
+}
 
-        __task_yield(thd_sched->curr);
+task  
+    task_curr () { 
+        return (curr_sched) ? curr_sched->curr : 0;  
 }

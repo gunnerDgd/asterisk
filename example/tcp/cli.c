@@ -1,29 +1,25 @@
-#include "tcp.h"
-#include "tcp_acpt.h"
-#include "box.h"
-
-#include "io_sched.h"
+#include <tcp.h>
+#include <tcp_acpt.h>
+#include <run.h>
+#include <async.h>
 
 #include <stdio.h>
+#include <Windows.h>
 
-io_sched_main(par_task, par)                              {
+run()                                                     {
     v4  *tcp_addr = make(v4_t)  from(2, "127.0.0.1", 6500);
-    tcp *tcp      = make(tcp_t) from(1, par);
+    tcp *tcp      = make(tcp_t) from(0)                   ;
     if (!tcp) return 0;
 
-    box* buf = make(box_t) from(1, 64);
-    ptr  ptr = box_ptr(buf, 0);
-    ptr_set_as(ptr, 0x00, ptr_size(ptr));
-
-    task* conn = tcp_conn(tcp, tcp_addr);
+    u8_t* buf  = mem_new (0, 64)        ;
+    task  conn = tcp_conn(tcp, tcp_addr);
     if  (!conn)
         return 1;
 
-    await(conn);
-    printf("Connected\n");
+    mem_set(buf, 0x00, 64);
+    await  (conn)         ;
+    printf ("Connected\n");
+    printf ("Received %s (%d Bytes).\n", buf, await(tcp_recv(tcp, buf, 64)));
 
-    task* recv = tcp_recv(tcp, ptr, 64);
-    printf("Received %s (%d Bytes).\n", ptr_as(ptr, const char*), await(recv));
-
-    return 0;
+    while (true_t) Sleep(1);
 }

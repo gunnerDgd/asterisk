@@ -16,16 +16,16 @@ bool_t
 
 void   
 	tcp_acpt_close
-		(tcp_acpt* par) {
+		(tcp_acpt* par)							  {
 			if(!par)						return;
 			if(trait_of(par) != tcp_acpt_t) return;
 
 			__tcp_acpt_close(par);
 }
 
-task* 
+io_task
 	tcp_acpt_run
-		(tcp_acpt* par) {
+		(tcp_acpt* par)								{
 			if(!par)						return 0;
 			if(trait_of(par) != tcp_acpt_t) return 0;
 

@@ -6,7 +6,6 @@ target_link_libraries(asterisk-example-file PRIVATE
     build 
     build-arch
     build-arch-asm
-    build-preset 
 
     ws2_32
     Mswsock
@@ -20,7 +19,6 @@ target_link_libraries(asterisk-example-tcp PRIVATE
     build 
     build-arch
     build-arch-asm
-    build-preset 
 
     ws2_32
     Mswsock
@@ -34,7 +32,6 @@ target_link_libraries(asterisk-example-tcp-cli PRIVATE
     build 
     build-arch
     build-arch-asm
-    build-preset 
 
     ws2_32
     Mswsock
@@ -48,7 +45,6 @@ target_link_libraries(asterisk-example-udp PRIVATE
     build 
     build-arch
     build-arch-asm
-    build-preset 
 
     ws2_32
     Mswsock
@@ -62,7 +58,6 @@ target_link_libraries(asterisk-example-udp-cli PRIVATE
     build 
     build-arch
     build-arch-asm
-    build-preset 
 
     ws2_32
     Mswsock
@@ -76,7 +71,7 @@ target_link_libraries(asterisk-example-task PRIVATE
     build 
     build-arch
     build-arch-asm
-
+    
     ws2_32
     Mswsock
 )

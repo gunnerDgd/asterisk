@@ -10,18 +10,12 @@ typedef struct   __sched           {
     cpu            cpu             ;
     obj_list       exec, susp, free;
     struct __task *curr            ;
-    struct __thd  *thd             ;
 }   __sched;
 
-bool_t         __sched_new  (__sched*, u32_t, va_list);
-bool_t         __sched_clone(__sched*, __sched*)      ;
-void           __sched_del  (__sched*)                ;
-
-void           __sched_susp (__sched*, struct __task*)       ;
-void           __sched_resm (__sched*, struct __task*)       ;
-struct __task* __sched_exec (__sched*, void(*)(void*), void*);
-
-bool_t         __sched_run  (__sched*)                ;
-struct __task* __sched_curr (__sched*)                ;
+bool_t         __sched_new     (__sched*, u32_t, va_list)       ;
+bool_t         __sched_clone   (__sched*, __sched*)             ;
+void           __sched_del     (__sched*)                       ;
+struct __task* __sched_dispatch(__sched*, void(*)(void*), void*);
+bool_t         __sched_run     (__sched*)                       ;
 
 #endif

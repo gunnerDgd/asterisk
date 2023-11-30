@@ -5,7 +5,7 @@
 
 obj_trait* tcp_t = &__tcp_trait;
 
-task* 
+io_task
     tcp_conn
         (tcp* par, obj* par_addr)  {
             if (!par)      return 0;
@@ -17,27 +17,27 @@ task*
             return 0;
 }
 
-task* 
+void
     tcp_close
         (tcp* par)                              {
             if (!par)                   return 0;
             if (trait_of(par) != tcp_t) return 0;
 
-            return __tcp_close(par);
+            __tcp_close(par);
 }
 
-task* 
+io_task
     tcp_send
-        (tcp* par, ptr par_buf, u64_t par_len)  {
+        (tcp* par, u8_t* par_buf, u64_t par_len)  {
             if (!par)                   return 0;
             if (trait_of(par) != tcp_t) return 0;
 
             return __tcp_send(par, par_buf, par_len); 
 }
 
-task* 
+io_task
     tcp_recv
-        (tcp* par, ptr par_buf, u64_t par_len)  {
+        (tcp* par, u8_t* par_buf, u64_t par_len)  {
             if (!par)                   return 0;
             if (trait_of(par) != tcp_t) return 0;
 

@@ -1,5 +1,13 @@
 #include "file.h"
+
+#include "curr.h"
 #include "thd.h"
+
+#include "io_sched.h"
+#include "io_task.h"
+
+#include "sched.h"
+#include "task.h"
 
 obj_trait __file_trait      = {
     .on_new   = &__file_new   ,
@@ -12,16 +20,9 @@ obj_trait __file_trait      = {
 bool_t
     __file_new
         (__file* par_file, u32_t par_count, va_list par) {
-            par_file->io_sched = ref(va_arg(par, __io_sched*));
-            if (!make_at(&par_file->path, str_t) from (0)) return false_t;        
-            if (!par_file->io_sched) {
-                del(&par_file->path);
-                return false_t      ;
-            }
-            
-            const char* path     = va_arg(par, const char*)    ;
-            u64_t       path_len = strlen(path)                ;
-            str_push_back_cstr(&par_file->path, path, path_len);
+            par_file->io_sched = (par_count == 0) ? ref(io_sched_curr()) : ref(va_arg(par, __io_sched*));
+            if (!par_file->io_sched)
+                return false_t;
 
             par_file->file = INVALID_HANDLE_VALUE;
             return true_t;
@@ -35,37 +36,35 @@ bool_t
 
 void   
     __file_del
-        (__file* par)                 {
-            CloseHandle(par->file)    ;
-            CloseHandle(par->io_sched);
-            del       (&par->path)    ;
+        (__file* par)                      {
+            CloseHandle(par->file)         ;
+            CloseHandle(par->file_io_sched);
+            del        (par->io_sched)     ;
 }
 
-bool_t 
+bool_t
     __file_open
-        (__file* par)                            {
-            if(par->file != INVALID_HANDLE_VALUE)
-                return false_t;
-
-            par->file = CreateFile          (
-                str_ptr(&par->path)         ,
-                GENERIC_READ | GENERIC_WRITE,
-                0                           ,
-                0                           ,
-                OPEN_EXISTING               ,
-                FILE_FLAG_OVERLAPPED        ,
+        (__file* par, const char* par_name)                     {
+            if(par->file != INVALID_HANDLE_VALUE) return false_t;
+            par->file = CreateFile                             (
+                par_name                                       ,
+                GENERIC_READ | GENERIC_WRITE | FILE_APPEND_DATA,
+                0                                              ,
+                0                                              ,
+                OPEN_EXISTING                                  ,
+                FILE_FLAG_OVERLAPPED                           ,
                 0
             );
 
             if (par->file == INVALID_HANDLE_VALUE) return false_t;
-            par->io_sched  = CreateIoCompletionPort (
-                par->file                      ,
-                __thd_curr()->io_sched.io_sched,
-               &__thd_curr()->io_sched         ,
+            par->file_io_sched = CreateIoCompletionPort (
+                par->file              ,
+                par->io_sched->io_sched,
+                par->io_sched          ,
                 0
             );
 
-            if(!par->io_sched)        {
+            if(!par->file_io_sched)   {
                 CloseHandle(par->file);
                 return false_t        ;
             }
@@ -75,29 +74,27 @@ bool_t
 
 bool_t 
     __file_create
-        (__file* par)                            {
-            if(par->file != INVALID_HANDLE_VALUE)
-                return false_t;
-
-            par->file = CreateFile          (
-                ptr_raw(str_ptr(&par->path)),
-                GENERIC_READ | GENERIC_WRITE,
-                0                           ,
-                0                           ,
-                CREATE_NEW                  ,
-                FILE_FLAG_OVERLAPPED        ,
+        (__file* par, const char* par_name)                     {
+            if(par->file != INVALID_HANDLE_VALUE) return false_t;
+            par->file = CreateFile                             (
+                par_name                                       ,
+                GENERIC_READ | GENERIC_WRITE | FILE_APPEND_DATA,
+                0                                              ,
+                0                                              ,
+                CREATE_NEW                                     ,
+                FILE_FLAG_OVERLAPPED                           ,
                 0
             );
 
             if (par->file == INVALID_HANDLE_VALUE) return false_t;
-            par->io_sched = CreateIoCompletionPort (
-                par->file                      ,
-                __thd_curr()->io_sched.io_sched,
-               &__thd_curr()->io_sched         ,
+            par->file_io_sched = CreateIoCompletionPort (
+                par->file              ,
+                par->io_sched->io_sched,
+                par->io_sched          ,
                 0
             );
 
-            if(!par->io_sched)        {
+            if(!par->file_io_sched)   {
                 CloseHandle(par->file);
                 return false_t        ;
             }
@@ -105,9 +102,9 @@ bool_t
             return true_t;
 }
 
-void 
+void
     __file_close
-        (__file* par) {
+        (__file* par)                             {
             if(par->file != INVALID_HANDLE_VALUE) {
                 CloseHandle(par->file)    ;
                 CloseHandle(par->io_sched);
@@ -115,40 +112,54 @@ void
             }
 }
 
-struct __task* 
+struct __io_task*
     __file_read
-        (__file* par, u8_t* par_buf, u64_t par_len)        {
-            __io_task *ret = mem_new (0, sizeof(__io_task)); 
+        (__file* par, u8_t* par_buf, u64_t par_len)            {
+            __io_task *ret = __io_sched_dispatch(par->io_sched);
             if (!ret) return 0;
 
-            bool_t res = ReadFile(par->file, par_buf, par_len, 0, ret);
-            if (!res && GetLastError() != ERROR_IO_PENDING)
-                goto read_failed;
+            ret->state              = __io_task_state_pend;
+            ret->io_task.Offset     = -1                  ;
+            ret->io_task.OffsetHigh = -1                  ;
+            bool_t res = ReadFile (
+                par->file    ,
+                par_buf      ,
+                par_len      , 
+                0            ,
+                &ret->io_task
+            );
 
-            ret->task = __sched_exec(&__thd_curr()->sched, __io_task_run, ret);
-            if (!ret->task) goto read_failed;
+            if (!res && GetLastError() != ERROR_IO_PENDING)     {
+                ret->state = __io_task_state_none               ;
+                obj_list_push_back(&par->io_sched->io_task, ret);
+                return 0;
+            }
 
-            return ret->task;
-    read_failed:
-            mem_del(0, ret);
-            return  0;
+            return ret;
 }
 
-struct __task*
+struct __io_task*
     __file_write
-        (__file* par, u8_t* par_buf, u64_t par_len) {
-            __io_task *ret = mem_new (0, sizeof(__io_task)); 
+        (__file* par, u8_t* par_buf, u64_t par_len)            {
+            __io_task *ret = __io_sched_dispatch(par->io_sched);
             if (!ret) return 0;
 
-            bool_t res = WriteFile (par->file, ptr_raw(par_buf), par_len, 0, ret);
-            if (!res && GetLastError() != ERROR_IO_PENDING)
-                goto write_failed;
+            ret->state              = __io_task_state_pend;
+            ret->io_task.Offset     = -1                  ;
+            ret->io_task.OffsetHigh = -1                  ;
+            bool_t res = WriteFile (
+                par->file    ,
+                par_buf      ,
+                par_len      ,
+                0            ,
+                &ret->io_task
+            );
 
-            ret->task = __sched_exec(&__thd_curr()->sched, __io_task_run, ret);
-            if (!ret->task) goto write_failed;
+            if (!res && GetLastError() != ERROR_IO_PENDING)     {
+                ret->state = __io_task_state_none               ;
+                obj_list_push_back(&par->io_sched->io_task, ret);
+                return 0;
+            }
 
-            return ret->task;
-    write_failed:
-            mem_del(0, ret);
-            return  0;
+            return ret;
 }

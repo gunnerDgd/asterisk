@@ -1,22 +1,20 @@
 #include "io_sched.h"
 #include "details/io_sched.h"
+#include "details/thd.h"
+#include "details/curr.h"
 
 obj_trait* io_sched_t = &__io_sched_trait;
 
-void 
+bool_t 
 	io_sched_run
-		(io_sched* par)					    {
-			if(trait_of(par) != io_sched_t)
-				return false_t;
+		(io_sched* par)									  {
+			if(trait_of(par) != io_sched_t) return false_t;
+			if(!par)						return false_t;
 
-			__io_sched_run(par);
+			return __io_sched_run(par);
 }
 
-void 
-	io_sched_dispatch
-		(io_sched* par, task* par_task) {
-			if(trait_of(par)      != io_sched_t) return false_t;
-			if(trait_of(par_task) != task_t)     return false_t;
-
-			__io_sched_dispatch(par, par_task);
+io_sched* 
+	io_sched_curr()								   {
+		return (curr_thd) ? &curr_thd->io_sched : 0;
 }
