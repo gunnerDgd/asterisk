@@ -1,9 +1,8 @@
+#include <file.h>
 #include <run.h>
 #include <async.h>
-#include <file.h>
 
 #include <stdio.h>
-#include <intrin.h>
 
 run()                                 {
     file *file = make(file_t) from (0);

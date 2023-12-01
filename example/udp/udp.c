@@ -3,7 +3,6 @@
 #include <async.h>
 
 #include <stdio.h>
-#include <Windows.h>
 
 run() {
     v4   *udp_addr = make(v4_t)  from (2, "0.0.0.0", 6500);
@@ -23,4 +22,6 @@ run() {
         u64_t recv_size = await(udp_recv(udp, buf, 64));
         printf("Received %s (%d Bytes)\n", buf, recv_size);
     }
+
+    mem_del(0, buf);
 }

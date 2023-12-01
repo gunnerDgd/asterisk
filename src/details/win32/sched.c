@@ -49,12 +49,12 @@ struct __task*
             if(!ret) ret = make (&__task_trait) from (1, par);
             if(!ret) return 0;
 
-            cpu_reg_write(&ret->cpu, cpu_rip, __task_main)                             ;
-            cpu_reg_write(&ret->cpu, cpu_rcx, ret)                                     ;
-            cpu_reg_write(&ret->cpu, cpu_rdx, par_fn)                                  ;
-            cpu_reg_write(&ret->cpu, cpu_r8 , par_arg)                                 ;
-            cpu_reg_write(&ret->cpu, cpu_rsp, (u64_t)ret->stack + ret->stack_size - 40);
-            cpu_reg_write(&ret->cpu, cpu_rbp, (u64_t)ret->stack + ret->stack_size - 40);
+            cpu_reg_write(&ret->cpu, cpu_rip, __task_main)                  ;
+            cpu_reg_write(&ret->cpu, cpu_rcx, ret)                          ;
+            cpu_reg_write(&ret->cpu, cpu_rdx, par_fn)                       ;
+            cpu_reg_write(&ret->cpu, cpu_r8 , par_arg)                      ;
+            cpu_reg_write(&ret->cpu, cpu_rsp, (u64_t)ret->stack + 1 mb - 40);
+            cpu_reg_write(&ret->cpu, cpu_rbp, (u64_t)ret->stack + 1 mb - 40);
 
             ret->sched_hnd = obj_list_push_back(&ret->sched->exec, ret);
             if (ret->sched->curr)                                            {
@@ -74,6 +74,24 @@ bool_t
         (__sched* par)                     {
             if (obj_list_empty(&par->exec)) return !obj_list_empty(&par->susp);
             __sched* prev = curr_sched;
+
+            obj_list_while(&par->exec,   curr_it) {
+                par->curr = obj_list_get(curr_it);
+                if (!par->curr) continue;
+
+                curr_sched = par                      ;
+                cpu_switch(&par->cpu, &par->curr->cpu);
+
+                curr_it = obj_list_next(curr_it);
+                if (par->curr->state == __task_state_exec)
+                    continue;
+                
+                if (par->curr->state == __task_state_term) obj_list_pop_at(&par->exec, par->curr->sched_hnd);
+                if (par->curr->state == __task_state_susp)                          {
+                    obj_list_pop_at(&par->exec, par->curr->sched_hnd)               ;
+                    par->curr->sched_hnd = obj_list_push_back(&par->susp, par->curr);
+                }
+            }
 
             while(!obj_list_empty(&par->exec))            {
                 par->curr = obj_list_pop_front(&par->exec);

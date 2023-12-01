@@ -141,8 +141,7 @@ struct __io_task*
 struct __io_task*
     __file_write
         (__file* par, u8_t* par_buf, u64_t par_len)            {
-            __io_task *ret = __io_sched_dispatch(par->io_sched);
-            if (!ret) return 0;
+            __io_task *ret = __io_sched_dispatch(par->io_sched); if (!ret) return 0;
 
             ret->state              = __io_task_state_pend;
             ret->io_task.Offset     = -1                  ;

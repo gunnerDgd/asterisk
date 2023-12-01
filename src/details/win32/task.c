@@ -3,7 +3,6 @@
 #include "thd.h"
 
 #include <Windows.h>
-#include <stdio.h>
 
 obj_trait __task_trait      = {
     .on_new   = &__task_new   ,
@@ -28,8 +27,7 @@ void
             }
 
             par->state = __task_state_term;
-            obj_list_pop_at(&par->sched->exec,  par->sched_hnd) ;
-            cpu_switch     (&par->cpu        , &par->sched->cpu);
+            cpu_switch(&par->cpu, &par->sched->cpu);
 }
 
 bool_t
@@ -47,11 +45,10 @@ bool_t
             par_task->wait       = 0;
             
             par_task->state      = __task_state_free;
-            par_task->stack_size = (par_count == 1) ? 1 mb : va_arg(par, u64_t);
             par_task->stack      = VirtualAlloc (
-                0                   ,
-                par_task->stack_size,
-                MEM_COMMIT          ,
+                0              ,
+                1 mb           ,
+                MEM_COMMIT     ,
                 PAGE_READWRITE
             );
 
@@ -73,8 +70,12 @@ bool_t
 
 void
     __task_del
-        (__task* par)                                             {
-            if(par->stack) VirtualFree(par->stack, 0, MEM_RELEASE);
+        (__task* par)                                      {
+            if(par->stack)                                 {
+                VirtualFree(par->stack, 0   , MEM_RELEASE) ;
+                VirtualFree(par->stack, 1 mb, MEM_DECOMMIT);
+            }
+
             del(&par->cpu)  ;
             del(&par->child);
 }
@@ -101,7 +102,7 @@ void*
             while (par->state != __task_state_term)
                 __task_susp(par->sched->curr);
 
-            par->wait = 0;
+            par->wait   = 0;
             return par->ret;
 }
 
@@ -111,23 +112,27 @@ bool_t
             if (!par)                            return false_t;
             if (!par->sched)                     return false_t;
             if (par->state != __task_state_exec) return false_t;
+            if (par->sched->curr == par)               {
+                par->state = __task_state_susp         ;
+                cpu_switch(&par->cpu, &par->sched->cpu);
+                return true_t;
+            }
 
             obj_list_pop_at(&par->sched->exec, par->sched_hnd)         ;
             par->sched_hnd = obj_list_push_back(&par->sched->susp, par);
             par->state     = __task_state_susp;
 
-            if (par->sched->curr == par) cpu_switch(&par->cpu, &par->sched->cpu);
             return true_t;
 }
 
 bool_t
     __task_resm
-        (__task* par)                                          {
-            if (!par)                            return false_t;
-            if (!par->sched)                     return false_t;
-            if (par->state != __task_state_susp) return false_t;
-
-            
+        (__task* par)                                                {
+            if (!par)                                  return false_t;
+            if (!par->sched)                           return false_t;
+            if (par->state       != __task_state_susp) return false_t;
+            if (par->sched->curr == par)               return false_t;
+                        
             obj_list_pop_at(&par->sched->susp, par->sched_hnd)         ;
             par->sched_hnd = obj_list_push_back(&par->sched->exec, par);
             par->state     = __task_state_exec                         ;

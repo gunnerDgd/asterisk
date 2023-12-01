@@ -22,7 +22,6 @@ typedef struct   __task       {
     
     u64_t           state     ;
     void           *stack     ;
-    u64_t           stack_size;
     void           *ret       ;
     struct __task  *wait      ;
 }   __task;

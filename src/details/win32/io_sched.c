@@ -53,33 +53,24 @@ void
 
 bool_t
 	__io_sched_run
-		(__io_sched* par)	           {
-			OVERLAPPED_ENTRY   cq[128] ;
-			u32_t			   cq_count;
-			__io_task		  *task	   ;
+		(__io_sched* par)						  {
+			OVERLAPPED_ENTRY cq[128]; u32_t cq_idx;
+			__io_task		*task	;
 
-			bool_t ret = GetQueuedCompletionStatusEx (
-				par->io_sched,
-				cq			 ,
-				128			 ,
-				&cq_count	 ,
-				1			 ,
-				FALSE
-			);
-			if (!ret) return false_t;
+			bool_t ret = GetQueuedCompletionStatusEx (par->io_sched, cq, 128, &cq_idx, 1, FALSE);
+			if   (!ret) return false_t;
 
-			ret = (cq_count == 128);
-			while (cq_count--)							{
-				if (par != cq[cq_count].lpCompletionKey) 
+			for (u32_t idx = 0 ; idx < cq_idx; ++idx)						     {
+				task = (u8_t*)cq[idx].lpOverlapped - offsetof(__io_task, io_task);
+				if (par != cq[idx].lpCompletionKey)
 					continue;
-				task	    = (u8_t*)(cq[cq_count].lpOverlapped) - sizeof(obj);
-				task->state = __io_task_state_cmpl;
 
-				if(task->ret == 0) task->ret = cq[cq_count].dwNumberOfBytesTransferred;
-				if(task->task)	   __task_resm(task->task);
+				task->state = __io_task_state_cmpl;
+				if (task->ret == 0) task->ret = cq[idx].dwNumberOfBytesTransferred;
+				if (task->task)	    __task_resm(task->task);
 			}
 
-			return ret;
+			return cq_idx == 128;
 }
 
 __io_task*

@@ -19,9 +19,9 @@ io_task
 
 void
     tcp_close
-        (tcp* par)                              {
-            if (!par)                   return 0;
-            if (trait_of(par) != tcp_t) return 0;
+        (tcp* par)                            {
+            if (!par)                   return;
+            if (trait_of(par) != tcp_t) return;
 
             __tcp_close(par);
 }

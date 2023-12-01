@@ -20,6 +20,4 @@ run()                                                     {
     await  (conn)         ;
     printf ("Connected\n");
     printf ("Received %s (%d Bytes).\n", buf, await(tcp_recv(tcp, buf, 64)));
-
-    while (true_t) Sleep(1);
 }
