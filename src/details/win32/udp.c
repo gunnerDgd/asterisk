@@ -99,8 +99,8 @@ struct __io_task*
                 0
             );
 
-			if (ret && WSAGetLastError() != ERROR_IO_PENDING)   {
-                obj_list_push_back(&par->io_sched->io_task, ret);
+			if (ret && WSAGetLastError() != ERROR_IO_PENDING) {
+                list_push_back(&par->io_sched->io_task, ret);
 				return 0;
 			}
 
@@ -122,14 +122,14 @@ struct __io_task*
                 0                         ,
                 0                         ,
                 &par_v4->host             ,
-                sizeof(struct sockaddr_in), 
+                sizeof(struct sockaddr_in),
                 &ret->io_task             ,
                 0
             );
 
-			if (res && WSAGetLastError() != ERROR_IO_PENDING)   {
-                ret->state = __io_task_state_none               ;
-                obj_list_push_back(&par->io_sched->io_task, ret);
+			if (res && WSAGetLastError() != ERROR_IO_PENDING) {
+                ret->state = __io_task_state_none           ;
+                list_push_back(&par->io_sched->io_task, ret);
 				return 0;
 			}
 
@@ -155,9 +155,9 @@ struct __io_task*
                 0
             );
 
-			if (res && WSAGetLastError() != ERROR_IO_PENDING)   {
-                ret->state = __io_task_state_none               ;
-                obj_list_push_back(&par->io_sched->io_task, ret);
+			if (res && WSAGetLastError() != ERROR_IO_PENDING) {
+                ret->state = __io_task_state_none           ;
+                list_push_back(&par->io_sched->io_task, ret);
 				return 0;
 			}
 
@@ -187,9 +187,9 @@ struct __io_task*
                 0
             );
 
-			if (ret && WSAGetLastError() != ERROR_IO_PENDING)   {
-                ret->state = __io_task_state_none               ;
-                obj_list_push_back(&par->io_sched->io_task, ret);
+			if (ret && WSAGetLastError() != ERROR_IO_PENDING) {
+                ret->state = __io_task_state_none           ;
+                list_push_back(&par->io_sched->io_task, ret);
 				return 0;
 			}
 

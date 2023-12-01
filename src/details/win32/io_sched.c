@@ -5,8 +5,6 @@
 #include "task.h"
 #include "curr.h"
 
-#include <stdio.h>
-
 obj_trait __io_sched_trait	    = {
 	.on_new	  = &__io_sched_new   ,
 	.on_clone = &__io_sched_clone ,
@@ -17,17 +15,17 @@ obj_trait __io_sched_trait	    = {
 
 void* 
 	__io_task_main
-		(struct __io_task* par)			 {
-			__task_susp		  (par->task);
-			obj_list_push_back(&par->io_sched->io_task, par); par->task = 0;
+		(struct __io_task* par)		 {
+			__task_susp	  (par->task);
+			list_push_back(&par->io_sched->io_task, par); par->task = 0;
 
 			return par->ret;
 }
 
 bool_t 
 	__io_sched_new
-		(__io_sched* par_sched, u32_t par_count, va_list par)					 {
-			if (!make_at(&par_sched->io_task, obj_list_t) from(0)) return false_t;
+		(__io_sched* par_sched, u32_t par_count, va_list par)				 {
+			if (!make_at(&par_sched->io_task, list_t) from(0)) return false_t;
 			par_sched->io_sched = CreateIoCompletionPort (
 				INVALID_HANDLE_VALUE,
 				NULL				,
@@ -78,7 +76,7 @@ __io_task*
 		(__io_sched* par)			{
 			if(!curr_sched) return 0;
 
-			__io_task *ret = obj_list_pop_front(&par->io_task)  ;
+			__io_task *ret = list_pop_front(&par->io_task)		;
 			if (!ret)  ret = make(&__io_task_trait) from(1, par);
 			if (!ret)  return 0;
 

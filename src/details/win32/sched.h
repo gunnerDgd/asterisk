@@ -2,13 +2,13 @@
 #define __DETAILS_WIN32_SCHED_H__
 
 #include <cpu.h>
-#include <obj_list.h>
+#include <list.h>
 
 extern obj_trait __sched_trait     ;
 typedef struct   __sched           {
     obj            head            ;
     cpu            cpu             ;
-    obj_list       exec, susp, free;
+    list           exec, susp, free;
     struct __task *curr            ;
 }   __sched;
 

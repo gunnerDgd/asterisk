@@ -129,9 +129,9 @@ struct __io_task*
                 &ret->io_task
             );
 
-            if (!res && GetLastError() != ERROR_IO_PENDING)     {
-                ret->state = __io_task_state_none               ;
-                obj_list_push_back(&par->io_sched->io_task, ret);
+            if (!res && GetLastError() != ERROR_IO_PENDING) {
+                ret->state = __io_task_state_none           ;
+                list_push_back(&par->io_sched->io_task, ret);
                 return 0;
             }
 
@@ -154,9 +154,9 @@ struct __io_task*
                 &ret->io_task
             );
 
-            if (!res && GetLastError() != ERROR_IO_PENDING)     {
-                ret->state = __io_task_state_none               ;
-                obj_list_push_back(&par->io_sched->io_task, ret);
+            if (!res && GetLastError() != ERROR_IO_PENDING) {
+                ret->state = __io_task_state_none           ;
+                list_push_back(&par->io_sched->io_task, ret);
                 return 0;
             }
 

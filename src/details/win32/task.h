@@ -2,7 +2,7 @@
 #define __DETAILS_WIN32_TASK_H__
 
 #include <cpu.h>
-#include <obj_list.h>
+#include <list.h>
 
 #define          __task_state_free 0
 #define          __task_state_exec 1
@@ -14,10 +14,10 @@ typedef struct   __task       {
     cpu             cpu       ;
 
     struct __sched *sched     ;
-    obj_list_elem   sched_hnd ;
+    list_elem       sched_hnd ;
     
-    obj_list        child     ;
-    obj_list_elem   child_hnd ;
+    list            child     ;
+    list_elem       child_hnd ;
     struct __task  *parent    ;
     
     u64_t           state     ;

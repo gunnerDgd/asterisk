@@ -18,8 +18,8 @@ void
             par->ret = par_fn(par_arg); 
             if (par->wait) __task_resm(par->wait);
 
-            obj_list_while(&par->child, child_it)     {
-                __task *child = obj_list_get(child_it); child_it = obj_list_next(child_it);
+            list_while(&par->child, child_it)     {
+                __task *child = list_get(child_it); child_it = list_next(child_it);
                 if    (!child) continue;
 
                 __task_wait(child);
@@ -32,9 +32,9 @@ void
 
 bool_t
     __task_new
-        (__task* par_task, u32_t par_count, va_list par)       {
-            if (!make_at(&par_task->cpu  , cpu_t)      from(0)) goto new_failed;
-            if (!make_at(&par_task->child, obj_list_t) from(0)) goto new_failed;
+        (__task* par_task, u32_t par_count, va_list par)                   {
+            if (!make_at(&par_task->cpu  , cpu_t)  from(0)) goto new_failed;
+            if (!make_at(&par_task->child, list_t) from(0)) goto new_failed;
 
             par_task->sched      = va_arg(par, __sched*);
             par_task->sched_hnd  = 0;
@@ -118,8 +118,8 @@ bool_t
                 return true_t;
             }
 
-            obj_list_pop_at(&par->sched->exec, par->sched_hnd)         ;
-            par->sched_hnd = obj_list_push_back(&par->sched->susp, par);
+            list_pop(&par->sched->exec, par->sched_hnd)            ;
+            par->sched_hnd = list_push_back(&par->sched->susp, par);
             par->state     = __task_state_susp;
 
             return true_t;
@@ -133,21 +133,21 @@ bool_t
             if (par->state       != __task_state_susp) return false_t;
             if (par->sched->curr == par)               return false_t;
                         
-            obj_list_pop_at(&par->sched->susp, par->sched_hnd)         ;
-            par->sched_hnd = obj_list_push_back(&par->sched->exec, par);
-            par->state     = __task_state_exec                         ;
+            list_pop(&par->sched->susp, par->sched_hnd)            ;
+            par->sched_hnd = list_push_back(&par->sched->exec, par);
+            par->state     = __task_state_exec                     ;
 
             return true_t;
 }
 
 bool_t   
     __task_free
-        (__task* par)                                                {
-            if (par->state       != __task_state_term) return false_t;
-            if (par->sched->curr == par)               return false_t;
-            if (par->parent) obj_list_pop_at(&par->parent->child, par->child_hnd);
+        (__task* par)                                                     {
+            if (par->state       != __task_state_term)      return false_t;
+            if (par->sched->curr == par)                    return false_t;
+            if (par->parent) list_pop(&par->parent->child, par->child_hnd);
 
-            u64_t ret      = par->ret; obj_list_push_back(&par->sched->free, par);
+            u64_t ret      = par->ret         ; list_push_back(&par->sched->free, par);
             par->state     = __task_state_free;
             par->sched_hnd = 0;
             par->child_hnd = 0;

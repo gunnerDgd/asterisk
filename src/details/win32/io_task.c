@@ -42,6 +42,6 @@ void*
             par->ret   = 0;
             par->task  = 0;
 
-            obj_list_push_back(&par->io_sched->io_task, par);
+            list_push_back(&par->io_sched->io_task, par);
             return ret;
 }
