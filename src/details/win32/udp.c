@@ -73,10 +73,9 @@ bool_t
 
 void   
     __udp_close
-        (__udp* par)                      {
-            closesocket(par->udp)         ;
-            CloseHandle(par->udp_io_sched);
-            del        (par->io_sched)    ;
+        (__udp* par)                  {
+            closesocket(par->udp)     ;
+            del        (par->io_sched);
 
             par->udp = INVALID_SOCKET;
 }
