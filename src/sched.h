@@ -1,13 +1,8 @@
 #ifndef __SCHED_H__
 #define __SCHED_H__
 
-#include "task.h"
-
-extern obj_trait* sched_t;
-typedef struct    sched { u8_t sched[1024]; } sched;
-
-task   sched_dispatch(sched*, void(*)(void*), void*);
-bool_t sched_run     (sched*)                       ;
-sched* sched_curr    ()                             ;
+#ifdef PRESET_WIN32
+#include "details/win32/sched.h"
+#endif
 
 #endif

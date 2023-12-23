@@ -4,38 +4,38 @@
 #include <cpu.h>
 #include <list.h>
 
-#define          __task_state_free 0
-#define          __task_state_exec 1
-#define          __task_state_susp 2
-#define          __task_state_term 3
-extern obj_trait __task_trait ;
-typedef struct   __task       {
-    obj             head      ;
-    cpu             cpu       ;
+#define           task_state_free 0
+#define           task_state_exec 1
+#define           task_state_susp 2
+#define           task_state_term 3
+extern obj_trait* task_t   ;
+typedef struct    task     {
+    obj           head     ;
+    cpu           cpu      ;
 
-    struct __sched *sched     ;
-    list_elem       sched_hnd ;
+    struct sched *sched    ;
+    list_elem     sched_hnd;
     
-    list            child     ;
-    list_elem       child_hnd ;
-    struct __task  *parent    ;
+    list          sub    ;
+    list_elem     sub_hnd;
+    struct task  *sup    ;
     
-    u64_t           state     ;
-    void           *stack     ;
-    void           *ret       ;
-    struct __task  *wait      ;
-}   __task;
+    u64_t         state    ;
+    void         *stack    ;
+    void         *ret      ;
+    struct task  *wait     ;
+}   task;
 
-void   __task_main (__task*, void*(*)(void*), void*);
+void   task_main (task*, void*(*)(void*), void*);
 
-bool_t __task_new  (__task*, u32_t, va_list);
-bool_t __task_clone(__task*, __task*)       ;
-void   __task_del  (__task*)                ;
+bool_t task_new  (task*, u32_t, va_list);
+bool_t task_clone(task*, task*)         ;
+void   task_del  (task*)                ;
 
-bool_t __task_yield(__task*);
-void*  __task_wait (__task*);
-bool_t __task_susp (__task*);
-bool_t __task_resm (__task*);
-bool_t __task_free (__task*);
+bool_t task_yield(task*);
+void*  task_wait (task*);
+bool_t task_susp (task*);
+bool_t task_resm (task*);
+bool_t task_free (task*);
 
 #endif

@@ -15,7 +15,7 @@ extern GUID				 DisconnectExGuid;
 extern WSADATA			 lib_info        ;
 extern SOCKET			 lib             ;
 
-bool_t __lib_init  ();
-void   __lib_deinit();
+bool_t lib_init  ();
+void   lib_deinit();
 
 #endif

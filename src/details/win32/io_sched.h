@@ -6,17 +6,17 @@
 #include <obj.h>
 #include <list.h>
 
-extern obj_trait __io_sched_trait;
-typedef struct   __io_sched		 {
-	obj	  head	  ;
-	void* io_sched;
-	list  io_task ;
-}	__io_sched;
+extern obj_trait* io_sched_t;
+typedef struct    io_sched	{
+	obj	  head		;
+	void* io_sched	;
+	list  none, pend;
+}	io_sched;
 
-bool_t			  __io_sched_new     (__io_sched*, u32_t, va_list);
-bool_t			  __io_sched_clone   (__io_sched*, __io_sched*)   ;
-void			  __io_sched_del     (__io_sched*)				  ;
-bool_t			  __io_sched_run     (__io_sched*)				  ;
-struct __io_task* __io_sched_dispatch(__io_sched*)				  ;
+bool_t		    io_sched_new     (io_sched*, u32_t, va_list);
+bool_t		    io_sched_clone   (io_sched*, io_sched*)     ;
+void		    io_sched_del     (io_sched*)				;
+bool_t		    io_sched_run     (io_sched*)				;
+struct io_task* io_sched_dispatch(io_sched*)				;
 
 #endif

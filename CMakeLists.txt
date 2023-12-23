@@ -17,9 +17,7 @@ elseif(WIN32)
     add_compile_definitions(PRESET_WIN32)
 endif ()
 
-include_directories(src)
 include_directories(lib/crisp/include)
-
 add_subdirectory   (lib)
 add_subdirectory   (src)
 add_subdirectory   (example)

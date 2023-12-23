@@ -1,9 +1,8 @@
 #ifndef __LIB_H__
 #define __LIB_H__
 
-#include <type.h>
-#include <type_atom.h>
+#ifdef PRESET_WIN32
+#include "details/win32/lib.h"
+#endif
 
-bool_t lib_init  ();
-void   lib_deinit();
 #endif

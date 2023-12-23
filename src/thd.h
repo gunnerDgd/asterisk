@@ -1,11 +1,8 @@
 #ifndef __THD_H__
 #define __THD_H__
 
-#include <obj.h>
-
-extern obj_trait* thd_t;
-typedef struct    thd { u8_t thd[2048]; } thd;
-
-thd* thd_curr();
+#ifdef PRESET_WIN32
+#include "details/win32/thd.h"
+#endif
 
 #endif

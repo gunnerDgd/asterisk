@@ -14,7 +14,7 @@ run()                                                                {
         return false_t;
     }
     while(true_t)                           {
-        tcp* cli = await(tcp_acpt_run(acpt));
+        tcp *cli = await(tcp_acpt_run(acpt));
         if (!cli)                                  {
             printf("Failed to Accept Connection\n");
             continue;

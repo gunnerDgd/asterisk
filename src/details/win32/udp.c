@@ -7,20 +7,22 @@
 #include "curr.h"
 #include "thd.h"
 
-obj_trait __udp_trait      = {
-    .on_new   = &__udp_new   ,
-    .on_clone = &__udp_clone ,
-    .on_ref   =            0 ,
-    .on_del   = &__udp_del   ,
-    .size     = sizeof(__udp)
+obj_trait udp_trait     = {
+    .on_new   = &udp_new  ,
+    .on_clone = &udp_clone,
+    .on_ref   =          0,
+    .on_del   = &udp_del  ,
+    .size     = sizeof(udp)
 };
 
+obj_trait *udp_t = &udp_trait;
+
 bool_t 
-    __udp_new
-        (__udp* par_udp, u32_t par_count, va_list par) {
-            par_udp->io_sched = (par_count == 1) ? ref(va_arg(par, __io_sched*)) : ref(&curr_thd->io_sched);
-            if (!par_udp->io_sched)
-                return false_t;
+    udp_new
+        (udp* par_udp, u32_t par_count, va_list par)                                           {
+            par_udp->io_sched = (par_count == 1) ? va_arg(par, io_sched*) : &curr_thd->io_sched;
+            if (!par_udp->io_sched)                        return false_t;
+            if (trait_of(par_udp->io_sched) != io_sched_t) return false_t;
 
             par_udp->udp = WSASocketW (
                 AF_INET            , 
@@ -50,43 +52,47 @@ bool_t
 }
 
 bool_t 
-    __udp_clone
-        (__udp* par, __udp* par_clone) {
+    udp_clone
+        (udp* par, udp* par_clone) {
             return false_t;
 }
 
 void   
-    __udp_del
-        (__udp* par)        {
-            __udp_close(par);
+    udp_del
+        (udp* par)        {
+            udp_close(par);
             return;
 }
 
 bool_t 
-    __udp_conn
-        (__udp* par, __v4* par_v4)                                        {
-            if (bind(par->udp, &par_v4->host, sizeof(struct sockaddr_in)))
-                return false_t;
+    udp_conn
+        (udp* par, v4* par_v4)                                                         {
+            if (!par)                                                    return false_t;
+            if (!par_v4)                                                 return false_t;
+
+            if (trait_of(par)    != udp_t)                               return false_t;
+            if (trait_of(par_v4) != v4_t)                                return false_t;
+            if (bind(par->udp, &par_v4->v4, sizeof(struct sockaddr_in))) return false_t;
 
             return true_t;
 }
 
 void   
-    __udp_close
-        (__udp* par)                  {
+    udp_close
+        (udp* par)                    {
             closesocket(par->udp)     ;
             del        (par->io_sched);
 
             par->udp = INVALID_SOCKET;
 }
 
-struct __io_task*
-    __udp_send
-        (__udp* par, u8_t* par_buf, u64_t par_len)             {
-            __io_task* ret = __io_sched_dispatch(par->io_sched);
-			if (!ret) return false_t;
+struct io_task*
+    udp_send
+        (udp* par, u8_t* par_buf, u64_t par_len)             {
+            io_task *ret = io_sched_dispatch(par->io_sched);
+			if     (!ret) return false_t;
 
-            ret->state     = __io_task_state_pend              ;
+            ret->state     = io_task_exec                      ;
 			WSABUF res_buf = { .buf = par_buf, .len = par_len };
 			i32_t  res     = WSASend (
                 par->udp     ,
@@ -99,20 +105,22 @@ struct __io_task*
             );
 
 			if (ret && WSAGetLastError() != ERROR_IO_PENDING) {
-                list_push_back(&par->io_sched->io_task, ret);
+                ret->state = io_task_free                ;
+                list_push_back(&par->io_sched->none, ret);
+
 				return 0;
 			}
 
 			return ret;
 }
 
-struct __io_task*
-    __udp_send_to
-        (__udp* par, u8_t* par_buf, u64_t par_len, __v4* par_v4) {
-			__io_task* ret = __io_sched_dispatch(par->io_sched);
-			if (!ret) return false_t;
+struct io_task*
+    udp_send_to
+        (udp* par, u8_t* par_buf, u64_t par_len, v4* par_v4) {
+			io_task *ret = io_sched_dispatch(par->io_sched);
+			if     (!ret) return false_t;
 
-            ret->state     = __io_task_state_pend              ;
+            ret->state     = io_task_exec                      ;
 			WSABUF res_buf = { .buf = par_buf, .len = par_len };
 			i32_t  res     = WSASendTo    (
                 par->udp                  ,
@@ -120,29 +128,29 @@ struct __io_task*
                 1                         ,
                 0                         ,
                 0                         ,
-                &par_v4->host             ,
+                &par_v4->v4               ,
                 sizeof(struct sockaddr_in),
                 &ret->io_task             ,
                 0
             );
 
 			if (res && WSAGetLastError() != ERROR_IO_PENDING) {
-                ret->state = __io_task_state_none           ;
-                list_push_back(&par->io_sched->io_task, ret);
+                ret->state = io_task_free                ;
+                list_push_back(&par->io_sched->none, ret);
 				return 0;
 			}
 
 			return ret;
 }
 
-struct __io_task*
-    __udp_recv
-        (__udp* par, u8_t* par_buf, u64_t par_len)             {
-			__io_task* ret = __io_sched_dispatch(par->io_sched);
-			if (!ret) return false_t;
+struct io_task*
+    udp_recv
+        (udp* par, u8_t* par_buf, u64_t par_len)             {
+			io_task *ret = io_sched_dispatch(par->io_sched);
+			if     (!ret) return false_t;
 
-            ret->state      = __io_task_state_pend;
-            par->flag       = 0                   ;
+            ret->state      = io_task_exec                      ;
+            par->flag       = 0                                 ;
 			WSABUF res_buf  = { .buf = par_buf, .len = par_len };
 			i32_t  res      = WSARecv (
                 par->udp     ,
@@ -155,21 +163,21 @@ struct __io_task*
             );
 
 			if (res && WSAGetLastError() != ERROR_IO_PENDING) {
-                ret->state = __io_task_state_none           ;
-                list_push_back(&par->io_sched->io_task, ret);
+                ret->state = io_task_free                ;
+                list_push_back(&par->io_sched->none, ret);
 				return 0;
 			}
 
 			return ret;
 }
 
-struct __io_task*
-    __udp_recv_from
-        (__udp* par, u8_t* par_buf, u64_t par_len, __v4* par_v4) {
-			__io_task* ret = __io_sched_dispatch(par->io_sched);
-			if (!ret) return false_t;
+struct io_task*
+    udp_recv_from
+        (udp* par, u8_t* par_buf, u64_t par_len, v4* par_v4) {
+			io_task *ret = io_sched_dispatch(par->io_sched);
+			if     (!ret) return false_t;
 
-            ret   ->state = __io_task_state_pend      ;
+            ret   ->state = io_task_exec              ;
             par_v4->size  = sizeof(struct sockaddr_in);
             par   ->flag  = 0                         ;
 
@@ -180,15 +188,15 @@ struct __io_task*
                 1               ,
                 0               ,
                 &par->flag      ,
-                &par_v4->host   ,
+                &par_v4->v4     ,
                 &par_v4->size   ,
                 &ret->io_task   ,
                 0
             );
 
 			if (ret && WSAGetLastError() != ERROR_IO_PENDING) {
-                ret->state = __io_task_state_none           ;
-                list_push_back(&par->io_sched->io_task, ret);
+                ret->state = io_task_free                ;
+                list_push_back(&par->io_sched->none, ret);
 				return 0;
 			}
 

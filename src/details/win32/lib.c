@@ -11,8 +11,7 @@ bool_t		  lib_mem_res_new(mem_res* par_res, u32_t par_count, va_list par) { retu
 void		  lib_mem_res_del(mem_res* par_res)							      { return				    ; }
 void*		  lib_mem_new    (mem_res* par, u64_t par_size)					  { return malloc (par_size); }
 void		  lib_mem_del    (mem_res* par, void* par_del)					  { free		  (par_del) ; }
-mem_res		  lib_mem_res;
-mem_res_trait lib_mem_res_trait    = {
+mem_res lib_mem_res    = {
 	   .on_new     = &lib_mem_res_new,
 	   .on_del     = &lib_mem_res_del,
 
@@ -21,9 +20,9 @@ mem_res_trait lib_mem_res_trait    = {
 };
 
 bool_t
-	__lib_init()							 			{
-		mem_res_new(&lib_mem_res, &lib_mem_res_trait, 0);
-	    set_mem_res(&lib_mem_res);
+	lib_init()						{
+		mem_res_new(&lib_mem_res, 0);
+	    set_mem_res(&lib_mem_res)   ;
 
 		if(WSAStartup(MAKEWORD(2, 2), &lib_info))
 			return false_t;
@@ -68,7 +67,7 @@ bool_t
 }
 
 void
-	__lib_deinit()		{
+	lib_deinit()		{
 		closesocket(lib);
 		WSACleanup ()	;
 }

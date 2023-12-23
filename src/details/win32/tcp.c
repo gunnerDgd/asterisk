@@ -4,42 +4,75 @@
 #include "io_task.h"
 
 #include "curr.h"
+#include "task.h"
 #include "thd.h"
 
-obj_trait __tcp_trait	  = {
-	.on_new	  = &__tcp_new  ,
-	.on_clone = &__tcp_clone,
-	.on_ref   =			   0,
-	.on_del	  = &__tcp_del  ,
-	.size	  = sizeof(__tcp)
+obj_trait tcp_trait	    = {
+	.on_new	  = &tcp_new  ,
+	.on_clone = &tcp_clone,
+	.on_ref   =		     0,
+	.on_del	  = &tcp_del  ,
+	.size	  = sizeof(tcp)
 };
 
-bool_t 
-	__tcp_new
-		(__tcp* par_tcp, u32_t par_count, va_list par)  {
-			par_tcp->io_sched     = (par_count == 1) ? ref(va_arg(par, __io_sched*)) : ref(&curr_thd->io_sched);
-			par_tcp->tcp	      = INVALID_SOCKET		;
-			par_tcp->tcp_io_sched = INVALID_HANDLE_VALUE;
+obj_trait* tcp_t = &tcp_trait;
 
-			return make_at(&par_tcp->v4, &__v4_trait) from (0);
+bool_t 
+	tcp_new
+		(tcp* par_tcp, u32_t par_count, va_list par) {
+			par_tcp->io_sched     = (par_count == 1) ? va_arg(par, io_sched*) : ref(&curr_thd->io_sched);
+			if (!par_tcp->io_sched)					       return false_t;
+			if (trait_of(par_tcp->io_sched) != io_sched_t) return false_t;
+			if (!make_at(&par_tcp->v4, v4_t) from (0))     return false_t;
+
+			par_tcp->tcp	      = INVALID_SOCKET		  ;
+			par_tcp->tcp_io_sched = INVALID_HANDLE_VALUE  ;
+			par_tcp->io_sched	  = ref(par_tcp->io_sched);
+
+			return true_t;
 }
 
 bool_t 
-	__tcp_clone
-		(__tcp* par, __tcp* par_clone) {
+	tcp_clone
+		(tcp* par, tcp* par_clone) {
 			return false_t;
 }
 
 void
-	__tcp_del
-		(__tcp* par)				  {
+	tcp_del
+		(tcp* par)				      {
 			del		   (par->io_sched);
 			closesocket(par->tcp)	  ;
 }
 
-struct __io_task*
-	__tcp_conn
-		(__tcp* par, __v4* par_v4)		    {
+void*
+	tcp_conn_do
+		(tcp* par)												{
+			io_task* res_task = io_sched_dispatch(par->io_sched); res_task->state = io_task_exec;
+			bool_t   res      = ConnectEx (
+				par->tcp				  ,
+				&par->v4.v4			      ,
+				sizeof(struct sockaddr_in),
+				0						  ,
+				0						  ,
+				0						  ,
+				&res_task->io_task
+			);
+
+			if (!res && WSAGetLastError() != ERROR_IO_PENDING) {
+				list_push_back(&par->io_sched->none, res_task);
+				res_task->state = io_task_free				  ;
+
+				return 0;
+			}
+
+			io_task_wait(res_task);
+			return par;
+}
+
+struct task*
+	tcp_conn
+		(tcp* par, v4* par_v4)		        {
 			if (par->tcp == INVALID_SOCKET) {
 				par->tcp = WSASocket(AF_INET, SOCK_STREAM, 0, 0, 0, WSA_FLAG_OVERLAPPED);
 				if (par->tcp == INVALID_SOCKET)
@@ -48,53 +81,42 @@ struct __io_task*
 
 			par->tcp_io_sched = CreateIoCompletionPort (
 				par->tcp			   ,
-				par->io_sched->io_sched, 
+				par->io_sched->io_sched,
 				par->io_sched		   ,
 				0
-			);
+			);		
 
 			if (!par->tcp_io_sched) goto conn_failed;
-			par->v4.host.sin_family		 = AF_INET;
-			par->v4.host.sin_addr.s_addr = 0	  ;
-			par->v4.host.sin_port		 = 0	  ;
+			par->v4.v4.sin_family	   = AF_INET;
+			par->v4.v4.sin_addr.s_addr = 0	    ;
+			par->v4.v4.sin_port		   = 0	    ;
 
-			if (bind(par->tcp, &par->v4.host, sizeof(struct sockaddr_in))) goto conn_failed;
-			if (!clone_at(&par->v4, par_v4))							   goto conn_failed;
-			__io_task* ret = __io_sched_dispatch(par->io_sched); if (!ret) goto conn_failed;
-			bool_t     res = ConnectEx	  (
-				par->tcp				  ,
-				&par->v4.host			  ,
-				sizeof(struct sockaddr_in),
-				0						  ,
-				0						  ,
-				0						  ,
-				&ret->io_task
-			);
+			if (bind(par->tcp, &par->v4.v4, sizeof(struct sockaddr_in))) goto conn_failed;
+			if (!clone_at(&par->v4, par_v4))						     goto conn_failed;
 
-			ret->state = __io_task_state_pend;
-			if (!res && WSAGetLastError() != ERROR_IO_PENDING) {
-				ret->state = __io_task_state_none			   ;
-				list_push_back(&par->io_sched->io_task, ret)   ;
-
-				goto conn_failed;
-			}
-
+			task  *ret = sched_dispatch(curr_sched, tcp_conn_do, par); if (!ret) goto conn_failed;
 			return ret;
-		conn_failed:
-			closesocket(par->tcp)    ;
-			par->tcp = INVALID_SOCKET;
+
+	conn_failed:
+			closesocket(par->tcp)			  ;
+			par->tcp		  = INVALID_SOCKET;
+			par->tcp_io_sched = 0			  ;
 
 			return 0;
 }
 
-void __tcp_close(__tcp* par) { closesocket(par->tcp); }
+void 
+	tcp_close
+		(tcp* par)				 {
+			closesocket(par->tcp); 
+}
 
-struct __io_task*
-	__tcp_send
-		(__tcp* par, u8_t* par_buf, u64_t par_len)				    {
-			__io_task* ret	   = __io_sched_dispatch(par->io_sched) ; if (!ret) return false_t;
-			WSABUF     ret_buf = { .buf = par_buf, .len = par_len  };
-			i32_t	   res     = WSASend (
+struct io_task*
+	tcp_send
+		(tcp* par, u8_t* par_buf, u64_t par_len)				  {
+			io_task* ret	 = io_sched_dispatch(par->io_sched)   ; if (!ret) return false_t;
+			WSABUF   ret_buf = { .buf = par_buf, .len = par_len  };
+			i32_t	 res     = WSASend (
 				par->tcp	 ,
 				&ret_buf	 ,
 				1			 ,
@@ -104,10 +126,10 @@ struct __io_task*
 				0
 			);
 
-			ret->state = __io_task_state_pend;
+			ret->state = io_task_exec;
 			if (res && WSAGetLastError() != ERROR_IO_PENDING) {
-				ret->state = __io_task_state_none			  ;
-				list_push_back(&par->io_sched->io_task, ret)  ;
+				ret->state = io_task_free			     ;
+				list_push_back(&par->io_sched->none, ret);
 
 				return 0;
 			}
@@ -115,13 +137,13 @@ struct __io_task*
 			return ret;
 }
 
-struct __io_task*
-	__tcp_recv
-		(__tcp* par, u8_t* par_buf, u64_t par_len) {
-			u32_t	   ret_flags = 0;
-			WSABUF	   ret_buf   = { .buf = par_buf, .len = par_len };
-			__io_task *ret       = __io_sched_dispatch(par->io_sched); if (!ret) return false_t;
-			i32_t      res		 = WSARecv (
+struct io_task*
+	tcp_recv
+		(tcp* par, u8_t* par_buf, u64_t par_len)				   {
+			u32_t	 ret_flags = 0								   ;
+			WSABUF	 ret_buf   = { .buf = par_buf, .len = par_len };
+			io_task *ret       = io_sched_dispatch(par->io_sched)  ; if (!ret) return false_t;
+			i32_t    res	   = WSARecv (
 				par->tcp	 ,
 				&ret_buf	 ,
 				1			 ,
@@ -131,10 +153,10 @@ struct __io_task*
 				0
 			);
 
-			ret->state = __io_task_state_pend;
+			ret->state = io_task_exec;
 			if (res && WSAGetLastError() != ERROR_IO_PENDING) {
-				ret->state = __io_task_state_none			  ;
-				list_push_back(&par->io_sched->io_task, ret)  ;
+				ret->state = io_task_free				 ;
+				list_push_back(&par->io_sched->none, ret);
 
 				return 0;
 			}

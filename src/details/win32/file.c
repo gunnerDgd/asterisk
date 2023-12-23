@@ -9,50 +9,53 @@
 #include "sched.h"
 #include "task.h"
 
-obj_trait __file_trait      = {
-    .on_new   = &__file_new   ,
-    .on_clone = &__file_clone ,
-    .on_ref   =             0 ,
-    .on_del   = &__file_del   ,
-    .size     = sizeof(__file)
+obj_trait file_trait     = {
+    .on_new   = &file_new  ,
+    .on_clone = &file_clone,
+    .on_ref   =           0,
+    .on_del   = &file_del  ,
+    .size     = sizeof(file)
 };
 
-bool_t
-    __file_new
-        (__file* par_file, u32_t par_count, va_list par) {
-            par_file->io_sched = (par_count == 0) ? ref(io_sched_curr()) : ref(va_arg(par, __io_sched*));
-            if (!par_file->io_sched)
-                return false_t;
+obj_trait* file_t = &file_trait;
 
-            par_file->file = INVALID_HANDLE_VALUE;
-            return true_t;
+bool_t
+    file_new
+        (file* par_file, u32_t par_count, va_list par) {
+            par_file->file     = INVALID_HANDLE_VALUE                                           ;
+            par_file->io_sched = (par_count == 0) ? &curr_thd->io_sched : va_arg(par, io_sched*);
+
+            return par_file->io_sched != NULL;
 }
 
 bool_t 
-    __file_clone
-        (__file* par, __file* par_clone) {
+    file_clone
+        (file* par, file* par_clone) {
             return false_t;
 }
 
 void   
-    __file_del
-        (__file* par)                      {
+    file_del
+        (file* par)                      {
             CloseHandle(par->file)         ;
             CloseHandle(par->file_io_sched);
             del        (par->io_sched)     ;
 }
 
 bool_t
-    __file_open
-        (__file* par, const char* par_name)                     {
-            if(par->file != INVALID_HANDLE_VALUE) return false_t;
-            par->file = CreateFile                             (
-                par_name                                       ,
-                GENERIC_READ | GENERIC_WRITE | FILE_APPEND_DATA,
-                0                                              ,
-                0                                              ,
-                OPEN_EXISTING                                  ,
-                FILE_FLAG_OVERLAPPED                           ,
+    file_open
+        (file* par, const char* par_name)                        {
+            if (!par)                              return false_t;
+            if (trait_of(par) != file_t)           return false_t;
+            if (par->file != INVALID_HANDLE_VALUE) return false_t;
+
+            par->file = CreateFile          (
+                par_name                    ,
+                GENERIC_READ | GENERIC_WRITE,
+                0                           ,
+                0                           ,
+                OPEN_EXISTING               ,
+                FILE_FLAG_OVERLAPPED        ,
                 0
             );
 
@@ -64,25 +67,29 @@ bool_t
                 0
             );
 
-            if(!par->file_io_sched)   {
-                CloseHandle(par->file);
-                return false_t        ;
+            if(!par->file_io_sched)             {
+                CloseHandle(par->file)          ;
+                par->file = INVALID_HANDLE_VALUE;
+                return false_t                  ;
             }
 
             return true_t;
 }
 
 bool_t 
-    __file_create
-        (__file* par, const char* par_name)                     {
-            if(par->file != INVALID_HANDLE_VALUE) return false_t;
-            par->file = CreateFile                             (
-                par_name                                       ,
-                GENERIC_READ | GENERIC_WRITE | FILE_APPEND_DATA,
-                0                                              ,
-                0                                              ,
-                CREATE_NEW                                     ,
-                FILE_FLAG_OVERLAPPED                           ,
+    file_create
+        (file* par, const char* par_name)                        {
+            if (!par)                              return false_t;
+            if (trait_of(par) != file_t)           return false_t;
+            if (par->file != INVALID_HANDLE_VALUE) return false_t;
+
+            par->file = CreateFile          (
+                par_name                    ,
+                GENERIC_READ | GENERIC_WRITE,
+                0                           ,
+                0                           ,
+                CREATE_NEW                  ,
+                FILE_FLAG_OVERLAPPED        ,
                 0
             );
 
@@ -94,33 +101,38 @@ bool_t
                 0
             );
 
-            if(!par->file_io_sched)   {
-                CloseHandle(par->file);
-                return false_t        ;
+            if(!par->file_io_sched)             {
+                CloseHandle(par->file)          ;
+                par->file = INVALID_HANDLE_VALUE;
+                return false_t                  ;
             }
 
             return true_t;
 }
 
 void
-    __file_close
-        (__file* par)                             {
+    file_close
+        (file* par)                               {
             if(par->file != INVALID_HANDLE_VALUE) {
                 CloseHandle(par->file)    ;
                 CloseHandle(par->io_sched);
+
                 par->file = INVALID_HANDLE_VALUE;
             }
 }
 
-struct __io_task*
-    __file_read
-        (__file* par, u8_t* par_buf, u64_t par_len)            {
-            __io_task *ret = __io_sched_dispatch(par->io_sched);
-            if (!ret) return 0;
+struct io_task*
+    file_read
+        (file* par, u8_t* par_buf, u64_t par_len)          {
+            if (!par)                              return 0;
+            if (!par_buf)                          return 0;
+            if (par->file == INVALID_HANDLE_VALUE) return 0;
+            if (trait_of(par) != file_t)           return 0; io_task *ret = io_sched_dispatch(par->io_sched);
+            if (!ret)                              return 0;
 
-            ret->state              = __io_task_state_pend;
-            ret->io_task.Offset     = -1                  ;
-            ret->io_task.OffsetHigh = -1                  ;
+            ret->state              = io_task_exec;
+            ret->io_task.Offset     = 0xFFFFFFFF  ;
+            ret->io_task.OffsetHigh = 0xFFFFFFFF  ;
             bool_t res = ReadFile (
                 par->file    ,
                 par_buf      ,
@@ -130,22 +142,26 @@ struct __io_task*
             );
 
             if (!res && GetLastError() != ERROR_IO_PENDING) {
-                ret->state = __io_task_state_none           ;
-                list_push_back(&par->io_sched->io_task, ret);
+                ret->state = io_task_free                ;
+                list_push_back(&par->io_sched->none, ret);
                 return 0;
             }
 
             return ret;
 }
 
-struct __io_task*
-    __file_write
-        (__file* par, u8_t* par_buf, u64_t par_len)            {
-            __io_task *ret = __io_sched_dispatch(par->io_sched); if (!ret) return 0;
+struct io_task*
+    file_write
+        (file* par, u8_t* par_buf, u64_t par_len)          {
+            if (!par)                              return 0;
+            if (!par_buf)                          return 0;
+            if (par->file == INVALID_HANDLE_VALUE) return 0;
+            if (trait_of(par) != file_t)           return 0; io_task *ret = io_sched_dispatch(par->io_sched);
+            if (!ret)                              return 0;
 
-            ret->state              = __io_task_state_pend;
-            ret->io_task.Offset     = -1                  ;
-            ret->io_task.OffsetHigh = -1                  ;
+            ret->state              = io_task_exec;
+            ret->io_task.Offset     = 0xFFFFFFFF  ;
+            ret->io_task.OffsetHigh = 0xFFFFFFFF  ;
             bool_t res = WriteFile (
                 par->file    ,
                 par_buf      ,
@@ -155,8 +171,8 @@ struct __io_task*
             );
 
             if (!res && GetLastError() != ERROR_IO_PENDING) {
-                ret->state = __io_task_state_none           ;
-                list_push_back(&par->io_sched->io_task, ret);
+                ret->state = io_task_free                ;
+                list_push_back(&par->io_sched->none, ret);
                 return 0;
             }
 

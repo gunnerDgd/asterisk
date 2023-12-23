@@ -5,7 +5,8 @@
 #include "io_task.h"
 #include "sched.h"
 
-task  async(void(*)(void*), void*);
-void* await(obj*)                 ;
+task* async    (void(*)(void*), void*);
+void* await    (obj*)                 ;
+void  await_all(u32_t, ...)           ;
 
 #endif

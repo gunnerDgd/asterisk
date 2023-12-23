@@ -4,20 +4,22 @@
 #include "io_sched.h"
 #include "v4.h"
 
-extern obj_trait __tcp_acpt_trait;
-typedef struct   __tcp_acpt      {
-	obj			head	;
-	SOCKET      tcp		;
-	HANDLE		tcp_iocp;
-	__io_sched* io_sched;
-}	__tcp_acpt;
+extern obj_trait* tcp_acpt_t;
+typedef struct    tcp_acpt  {
+	obj		  head	  ;
+	SOCKET    tcp	  ;
+	HANDLE	  tcp_iocp;
+	io_sched* io_sched;
+}	tcp_acpt;
 
-bool_t			  __tcp_acpt_new  (__tcp_acpt*, u32_t, va_list);
-bool_t			  __tcp_acpt_clone(__tcp_acpt*,  __tcp_acpt*)  ;
-void			  __tcp_acpt_del  (__tcp_acpt*)				   ;
+bool_t		 tcp_acpt_new   (tcp_acpt*, u32_t, va_list);
+bool_t		 tcp_acpt_clone (tcp_acpt*, tcp_acpt*)     ;
+void		 tcp_acpt_del   (tcp_acpt*)				   ;
 
-bool_t			  __tcp_acpt_conn (__tcp_acpt*, __v4*)		   ;
-void			  __tcp_acpt_close(__tcp_acpt*)				   ;
-struct __io_task* __tcp_acpt_run  (__tcp_acpt*)				   ;
+bool_t		 tcp_acpt_conn  (tcp_acpt*, v4*)		   ;
+void		 tcp_acpt_close (tcp_acpt*)				   ;
+
+void*		 tcp_acpt_run_do(tcp_acpt*)				   ;
+struct task* tcp_acpt_run   (tcp_acpt*)				   ;
 
 #endif

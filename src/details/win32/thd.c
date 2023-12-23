@@ -3,17 +3,19 @@
 
 #include <Windows.h>
 
-obj_trait __thd_trait     = {
-    .on_new   = &__thd_new  ,
-    .on_clone = &__thd_clone,
-    .on_ref   =            0,
-    .on_del   = &__thd_del  ,
-    .size     = sizeof(__thd)
+obj_trait thd_trait     = {
+    .on_new   = &thd_new  ,
+    .on_clone = &thd_clone,
+    .on_ref   =          0,
+    .on_del   = &thd_del  ,
+    .size     = sizeof(thd)
 };
 
+obj_trait* thd_t = &thd_trait;
+
 void
-    __thd_main
-        (__thd* par)                                                             {
+    thd_main
+        (thd* par)                                                               {
             if (!make_at       (&par->sched   , sched_t)    from(0))       return;
             if (!make_at       (&par->io_sched, io_sched_t) from(0))       return;
             if (!sched_dispatch(&par->sched   , par->func, par->func_arg)) return;
@@ -25,11 +27,11 @@ void
 }
 
 bool_t
-    __thd_new
-        (__thd* par_thd, u32_t par_count, va_list par) {
+    thd_new
+        (thd* par_thd, u32_t par_count, va_list par) {
             par_thd->func     = va_arg(par, void*);
             par_thd->func_arg = va_arg(par, void*);
-            par_thd->thd      = CreateThread(0, 0, __thd_main, par_thd, 0, 0);
+            par_thd->thd      = CreateThread(0, 0, thd_main, par_thd, 0, 0);
             if (par_thd->thd == INVALID_HANDLE_VALUE) {
                 del(&par_thd->sched);
                 return false_t;
@@ -39,14 +41,14 @@ bool_t
 }
 
 bool_t 
-    __thd_clone
-        (__thd* par, __thd* par_clone) {
+    thd_clone
+        (thd* par, thd* par_clone) {
             return false_t;
 }
 
 void
-    __thd_del
-        (__thd* par)             {
+    thd_del
+        (thd* par)               {
             if (!par)      return;
             if (!par->thd) return;
 

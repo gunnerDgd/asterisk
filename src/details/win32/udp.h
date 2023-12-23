@@ -3,25 +3,25 @@
 
 #include "v4.h"
 
-extern obj_trait __udp_trait       ;
-typedef struct   __udp             {
-    obj                head        ;
-    SOCKET             udp         ;
-    HANDLE             udp_io_sched;
-    struct __io_sched* io_sched    ;
-    u32_t              flag        ;
-}   __udp;
+extern obj_trait* udp_t          ;
+typedef struct    udp            {
+    obj              head        ;
+    SOCKET           udp         ;
+    HANDLE           udp_io_sched;
+    struct io_sched* io_sched    ;
+    u32_t            flag        ;
+}   udp;
 
-bool_t            __udp_new      (__udp*, u32_t, va_list)     ;
-bool_t            __udp_clone    (__udp*, __udp*)             ;
-void              __udp_del      (__udp*)                     ;
+bool_t          udp_new      (udp*, u32_t, va_list)   ;
+bool_t          udp_clone    (udp*, udp*)             ;
+void            udp_del      (udp*)                   ;
 
-bool_t            __udp_conn     (__udp*, __v4*)              ;
-void              __udp_close    (__udp*)                     ;
+bool_t          udp_conn     (udp*, v4*)              ;
+void            udp_close    (udp*)                   ;
 
-struct __io_task* __udp_send     (__udp*, u8_t*, u64_t)       ;
-struct __io_task* __udp_send_to  (__udp*, u8_t*, u64_t, __v4*);
-struct __io_task* __udp_recv     (__udp*, u8_t*, u64_t)       ;
-struct __io_task* __udp_recv_from(__udp*, u8_t*, u64_t, __v4*);
+struct io_task* udp_send     (udp*, u8_t*, u64_t)     ;
+struct io_task* udp_send_to  (udp*, u8_t*, u64_t, v4*);
+struct io_task* udp_recv     (udp*, u8_t*, u64_t)     ;
+struct io_task* udp_recv_from(udp*, u8_t*, u64_t, v4*);
 
 #endif
