@@ -2,7 +2,7 @@
 #define __V4_H__
 
 #ifdef PRESET_WIN32
-#include "details/win32/v4.h"
+#include "core/win32/v4.h"
 #endif
 
 #endif

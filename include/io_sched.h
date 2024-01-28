@@ -1,12 +1,11 @@
 #ifndef __IO_SCHED_H__
 #define __IO_SCHED_H__
 
-#include <obj.h>
+#include <fut.h>
 
 extern obj_trait* io_sched_t;
-typedef struct    io_sched { u8_t io_sched[256]; } io_sched;
+typedef struct    io_sched { u8_t io_sched[8 KB]; } io_sched;
 
-bool_t            io_sched_run (io_sched*);
-io_sched*         io_sched_curr()         ;
+fut* io_sched_fut(io_sched*);
 
 #endif

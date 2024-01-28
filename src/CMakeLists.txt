@@ -1,79 +1,59 @@
 project    (asterisk)
-add_library(asterisk STATIC
-    lib.h
-    curr.h
-    thd.h
-    task.h
-    sched.h
-    file.h
-    io_sched.h
-    io_task.h
-    tcp_acpt.h
-    tcp.h
-    udp.h
-    v4.h
-
-    async.h
-    async.c
-)
-
 add_library(asterisk-include STATIC
-    ../include/run.h
-
-    ../include/lib.h
     ../include/thd.h
-    ../include/task.h
-    ../include/sched.h
-    ../include/file.h
+    ../include/this.h
     ../include/io_sched.h
-    ../include/io_task.h
 
+    ../include/file.h
     ../include/tcp_acpt.h
     ../include/tcp.h
     ../include/udp.h
     ../include/v4.h
-
-    ../include/async.h
 )
 
 set_target_properties(asterisk-include PROPERTIES LINKER_LANGUAGE C)
-
 if(PRESET_WIN32)
-    add_library(asterisk-env STATIC
-        details/win32/lib.h
-        details/win32/lib.c
+    add_library(asterisk STATIC
+        core/win32/core.h
+        core/win32/core.c
 
-        details/win32/sched.h
-        details/win32/sched.c
+        core/win32/thd.h
+        core/win32/thd.c
 
-        details/win32/task.h
-        details/win32/task.c
+        core/win32/io_sched.h
+        core/win32/io_sched.c
 
-        details/win32/io_sched.h
-        details/win32/io_sched.c
+        core/win32/io_res.h
+        core/win32/io_res.c
 
-        details/win32/io_task.h
-        details/win32/io_task.c
+        core/win32/this.h
+        core/win32/this.c
 
-        details/win32/thd.h
-        details/win32/thd.c
+        core/win32/file.h
+        core/win32/file.c
 
-        details/win32/curr.h
-        details/win32/curr.c
+        core/win32/v4.h
+        core/win32/v4.c
 
-        details/win32/file.h
-        details/win32/file.c
+        core/win32/tcp_acpt.h
+        core/win32/tcp_acpt.c
 
-        details/win32/v4.h
-        details/win32/v4.c
+        core/win32/tcp.h
+        core/win32/tcp.c
 
-        details/win32/tcp_acpt.h
-        details/win32/tcp_acpt.c
+        core/win32/udp.h
+        core/win32/udp.c
 
-        details/win32/tcp.h
-        details/win32/tcp.c
+        core.h
+        this.h
+        thd.h
+        io_sched.h
+        io_res.h
 
-        details/win32/udp.h
-        details/win32/udp.c
+        file.h
+        tcp_acpt.h
+        tcp.h
+        udp.h
+        v4.h
     )
 endif ()

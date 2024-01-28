@@ -1,11 +1,21 @@
-#ifndef __UDP_H__
-#define __UDP_H__
+#ifndef __CORE_WIN32_UDP_H__
+#define __CORE_WIN32_UDP_H__
 
 #include "v4.h"
 #include <fut.h>
 
-obj_trait*     udp_t;
-typedef struct udp { u8_t udp[128]; } udp;
+extern obj_trait* udp_t    ;
+typedef struct    udp      {
+    obj              head  ;
+    SOCKET           udp   ;
+    HANDLE           udp_io;
+    struct io_sched* sched ;
+    u32_t            flag  ;
+}   udp;
+
+bool_t udp_new         (udp*, u32_t, va_list)    ;
+bool_t udp_clone       (udp*, udp*)              ;
+void   udp_del         (udp*)                    ;
 
 bool_t udp_conn        (udp*, obj*)              ;
 bool_t udp_conn_v4     (udp*, v4 *)              ;
