@@ -2,6 +2,7 @@
 #define __TCP_H__
 
 #include <fut.h>
+#include "v4.h"
 
 extern obj_trait* tcp_t;
 typedef struct    tcp { u8_t tcp[128]; } tcp;

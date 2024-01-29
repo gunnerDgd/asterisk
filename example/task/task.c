@@ -2,12 +2,18 @@
 #include <stdio.h>
 
 void* 
-    test()                    { 
+    test()                    {
+        static int count = 0;
         printf("Hello Test\n"); 
-        return 1; 
+        return ++count; 
 }
 
 void async_main()                      {
-    fut* a = async(test, 0);
-    printf("Hello World (RET : %d)\n", await(a));
+    fut* a = 0; 
+    a = async(test, 0); printf("Hello World (RET : %d)\n", await(a));
+    a = async(test, 0); printf("Hello World (RET : %d)\n", await(a));
+    a = async(test, 0); printf("Hello World (RET : %d)\n", await(a));
+    a = async(test, 0); printf("Hello World (RET : %d)\n", await(a));
+    a = async(test, 0); printf("Hello World (RET : %d)\n", await(a));
+    a = async(test, 0); printf("Hello World (RET : %d)\n", await(a));
 }

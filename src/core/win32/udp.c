@@ -1,10 +1,5 @@
 #include "udp.h"
-
-#include "io_sched.h"
-#include "io_res.h"
-#include "thd.h"
-
-#include "core.h"
+#include "this.h"
 
 obj_trait udp_trait     = {
     .on_new   = &udp_new  ,
@@ -18,11 +13,10 @@ obj_trait *udp_t = &udp_trait;
 
 bool_t 
     udp_new
-        (udp* par_udp, u32_t par_count, va_list par)                              {
-            io_sched* sched = 0; if (par_count > 0) sched = va_arg(par, io_sched*);
-            if (!sched)                        return false_t;
-            if (trait_of(sched) != io_sched_t) return false_t;
-
+        (udp* par_udp, u32_t par_count, va_list par)                      {
+            io_run* run = 0; if (par_count > 0) run = va_arg(par, io_run*);
+            if (!run)                      return false_t;
+            if (trait_of(run) != io_run_t) return false_t;
             par_udp->udp = WSASocket (
                 AF_INET            , 
                 SOCK_DGRAM         , 
@@ -34,9 +28,9 @@ bool_t
 
             if (par_udp->udp == INVALID_SOCKET) return false_t;
             par_udp->udp_io = CreateIoCompletionPort (
-                par_udp->udp       ,
-                par_udp->sched->hnd,
-                par_udp->sched     ,
+                par_udp->udp,
+                run->hnd    ,
+                run         ,
                 0
             );
 
@@ -44,6 +38,8 @@ bool_t
                 closesocket(par_udp->udp);
                 return false_t;
             }
+
+            par_udp->run = ref(run);
             return true_t;
 }
 
@@ -55,8 +51,9 @@ bool_t
 
 void   
     udp_del
-        (udp* par)        {
-            udp_close(par);
+        (udp* par)             {
+            del      (par->run);
+            udp_close(par)     ;
             return;
 }
 
@@ -86,9 +83,9 @@ bool_t
 
 void   
     udp_close
-        (udp* par)                 {
-            closesocket(par->udp)  ;
-            del        (par->sched);
+        (udp* par)               {
+            closesocket(par->udp);
+            del        (par->run);
 
             par->udp = INVALID_SOCKET;
 }
@@ -101,7 +98,7 @@ fut*
             if (!par)                      return 0;
             if (trait_of(par) != udp_t)    return 0;
 
-            io_res* ret = make (io_res_t) from (1, par->sched);
+            io_res* ret = make (io_res_t) from (1, par->run);
             if (!ret)                      return 0;
             if (trait_of(ret) != io_res_t) return 0;
 
@@ -111,7 +108,7 @@ fut*
                 &buf     ,
                 1        ,
                 0        ,
-                0        ,
+                par->flag,
                 &ret->res,
                 0
             );
@@ -143,19 +140,19 @@ fut*
             if (trait_of(par_v4) != v4_t)  return 0;
             if (trait_of(par)    != udp_t) return 0;
 
-			io_res *ret = make (io_res_t) from (1, par->sched);
+			io_res *ret = make (io_res_t) from (1, par->run);
 			if (!ret)                      return 0;
             if (trait_of(ret) != io_res_t) return 0;
 			WSABUF buf = { .buf = par_buf, .len = par_len };
-			i32_t  res = WSASendTo        (
-                par->udp                  ,
-                &buf                      ,
-                1                         ,
-                0                         ,
-                0                         ,
-                &par_v4->v4               ,
-                sizeof(struct sockaddr_in),
-                &ret->res                 ,
+			i32_t  res = WSASendTo (
+                par->udp          ,
+                &buf              ,
+                1                 ,
+                0                 ,
+                0                 ,
+                &par_v4->v4       ,
+                sizeof(par_v4->v4),
+                &ret->res         ,
                 0
             );
 
@@ -176,18 +173,18 @@ fut*
             if (!par)                      return 0;
             if (trait_of(par) != udp_t)    return 0;
 
-            io_res* ret = make (io_res_t) from (1, par->sched);
+            io_res* ret = make (io_res_t) from (1, par->run);
             if (!ret)                      return 0;
             if (trait_of(ret) != io_res_t) return 0;
 
 			WSABUF buf = { .buf = par_buf, .len = par_len };
-			i32_t  res = WSARecv (
-                par->udp ,
-                &buf     ,
-                1        ,
-                0        ,
-                0        ,
-                &ret->res,
+			i32_t  res = WSARecv                           (
+                par->udp  ,
+                &buf      ,
+                1         ,
+                0         ,
+                &par->flag,
+                &ret->res ,
                 0
             );
 
@@ -218,19 +215,19 @@ fut*
             if (trait_of(par_v4) != v4_t)  return 0;
             if (trait_of(par)    != udp_t) return 0;
 
-			io_res *ret = make (io_res_t) from (1, par->sched);
+			io_res *ret = make (io_res_t) from (1, par->run);
 			if (!ret)                      return 0;
             if (trait_of(ret) != io_res_t) return 0;
 			WSABUF buf = { .buf = par_buf, .len = par_len };
-			i32_t  res = WSARecvFrom      (
-                par->udp                  ,
-                &buf                      ,
-                1                         ,
-                0                         ,
-                0                         ,
-                &par_v4->v4               ,
-                sizeof(struct sockaddr_in),
-                &ret->res                 ,
+			i32_t  res = WSARecvFrom (
+                par->udp          ,
+                &buf              ,
+                1                 ,
+                0                 ,
+                0                 ,
+                &par_v4->v4       ,
+                sizeof(par_v4->v4),
+                &ret->res         ,
                 0
             );
 

@@ -1,23 +1,33 @@
-#include <tcp.h>
-#include <tcp_acpt.h>
-#include <run.h>
-#include <async.h>
+#include <asterisk/tcp.h>
+#include <asterisk/tcp_acpt.h>
+#include <asterisk/this.h>
+
+#include <asterisk/io_serv.h>
+#include <asterisk/io_run.h>
 
 #include <stdio.h>
-#include <Windows.h>
 
-run()                                                     {
-    v4  *tcp_addr = make(v4_t)  from(2, "127.0.0.1", 6500);
-    tcp *tcp      = make(tcp_t) from(0)                   ;
-    if (!tcp) return 0;
+void async_main()                                {
+    io_run  *run  = make(io_run_t)  from (0)     ;
+    io_serv *serv = make(io_serv_t) from (1, run);
+    tcp     *tcp  = make(tcp_t)     from (1, run);
+    v4      *addr = make(v4_t)      from (0);
+    if (!addr) return 0;
+    if (!tcp)  return 0;
 
-    u8_t* buf  = mem_new (0, 64)        ;
-    task  conn = tcp_conn(tcp, tcp_addr);
-    if  (!conn)
-        return 1;
+    v4_from_cstr(addr, "127.0.0.1");
+    v4_port     (addr, 6500)       ;
+
+    u8_t* buf  = new (u8_t[64]);
+    if  (!await(tcp_conn(tcp, addr))) return 1;
 
     mem_set(buf, 0x00, 64);
-    await  (conn)         ;
     printf ("Connected\n");
     printf ("Received %s (%d Bytes).\n", buf, await(tcp_recv(tcp, buf, 64)));
+
+    drop(buf) ;
+    del (run) ;
+    del (serv);
+    del (tcp) ;
+    del (addr);
 }

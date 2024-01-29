@@ -5,14 +5,14 @@
 #include <str.h>
 #include <fut.h>
 
-struct io_sched;
+#include "io_run.h"
 
 extern obj_trait* file_t;
-typedef struct    file      {
-    obj              head   ;
-    struct io_sched* sched  ;
-    void            *file_io;
-    void            *file   ;
+typedef struct    file  {
+    obj     head   ;
+    io_run *run    ;
+    void   *file_io;
+    void   *file   ;
 }   file;
 
 bool_t file_new        (file*, u32_t, va_list);

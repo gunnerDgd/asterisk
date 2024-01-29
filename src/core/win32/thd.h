@@ -9,7 +9,6 @@ typedef struct    thd  {
     obj     head ;
     sched   sched;
     u64_t   stat ;
-    fut    *fut  ;
     void* (*run)(void*);
     void   *arg;
     void   *thd;

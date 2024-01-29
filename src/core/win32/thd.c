@@ -18,10 +18,16 @@ void*
         (thd* par)                               {
             if (!par)                   return -1;
             if (trait_of(par) != thd_t) return -1;
+            this *this = make (this_t) from      (
+                3          ,
+                par        ,
+                &par->sched,
+                par->run   ,
+                par->arg
+            );
 
-            this *this = make (this_t) from (3, &par->sched, par->run, par->arg);
-            if  (!this)                    return -1;
-            if  (trait_of(this) != this_t) return -1;
+            if (!this)                       return -1;
+            if (trait_of(this) != this_t)    return -1;
 
             while (!sched_idle(&par->sched)) sched_run(&par->sched);
             par->stat = fut_ready;
@@ -90,7 +96,7 @@ void
             if (!par->thd) return;
 
             WaitForSingleObject(par->thd, INFINITE);
-            del(&par->sched);
+            del(&par->sched)   ;
 }
 
 void  

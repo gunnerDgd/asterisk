@@ -1,15 +1,21 @@
-#include <tcp.h>
-#include <tcp_acpt.h>
-#include <run.h>
-#include <async.h>
+#include <asterisk/tcp.h>
+#include <asterisk/tcp_acpt.h>
+#include <asterisk/this.h>
+#include <asterisk/v4.h>
+
+#include <asterisk/io_serv.h>
+#include <asterisk/io_run.h>
 
 #include <stdio.h>
 
-run()                                                                {
-    v4       *acpt_addr = make(v4_t)       from(2, "127.0.0.1", 6500);
-    tcp_acpt *acpt      = make(tcp_acpt_t) from(0)                   ;
+void async_main()                                  {
+    io_run   *run  = make(io_run_t)   from (0)     ;
+    io_serv  *serv = make(io_serv_t)  from (1, run);
+    tcp_acpt* acpt = make(tcp_acpt_t) from (1, run);
+    v4       *addr = make(v4_t)       from (0)     ;
 
-    if (!tcp_acpt_conn(acpt, acpt_addr))     {
+    v4_port(addr, 6500);
+    if (!tcp_acpt_conn(acpt, addr))          {
         printf("Failed to Create Connection");
         return false_t;
     }
@@ -26,7 +32,9 @@ run()                                                                {
         del(cli);
     }
 
-    del(acpt_addr);
-    del(acpt)     ;
+    del(addr);
+    del(acpt);
+    del(run) ;
+    del(serv);
     return 0;
 }

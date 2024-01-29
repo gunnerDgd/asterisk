@@ -8,29 +8,32 @@
 
 #include <fut.h>
 
+#include "thd.h"
 extern obj_trait *this_t ;
 typedef struct    this   {
     obj     head         ;
     sched  *sched        ;
     task   *task         ;
+    thd    *thd          ;
     fut    *fut          ;
     void* (*entry)(void*);
     void   *ret          ;
     void   *arg          ;
 }   this;
 
-extern __declspec(thread) this* this_thd;
-bool_t this_new    (this*, u32_t, va_list);
-bool_t this_clone  (this*, this*)         ;
-void   this_del    (this*)                ;
+extern __declspec(thread) this* curr;
+bool_t    this_new     (this*, u32_t, va_list);
+bool_t    this_clone   (this*, this*)         ;
+void      this_del     (this*)                ;
 
-sched* this_sched  ();
-task*  this_task   ();
+thd*      this_thd     ()                     ;
+sched*    this_sched   ()                     ;
+task*     this_task    ()                     ;
 
-void   await_all_va(u32_t, va_list)       ;
-void   await_all   (u32_t, ...)           ;
-void*  await       (fut*)                 ;
-fut*   async       (void(*)(void*), void*);
-void   yield       ()                     ;
+void      await_all_va (u32_t, va_list)       ;
+void      await_all    (u32_t, ...)           ;
+void*     await        (fut*)                 ;
+fut*      async        (void(*)(void*), void*);
+void      yield        ()                     ;
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef __CORE_WIN32_TCP_ACPT_H__
 #define __CORE_WIN32_TCP_ACPT_H__
 
-#include "io_sched.h"
+#include "io_run.h"
 #include "io_res.h"
 
 #include "tcp.h"
@@ -11,9 +11,9 @@
 
 extern obj_trait* tcp_acpt_t;
 typedef struct    tcp_acpt  {
-	obj		  head ;
-	io_sched *sched;
-	tcp		  tcp  ;
+	obj		head;
+	io_run *run ;
+	tcp		tcp ;
 }	tcp_acpt;
 
 bool_t tcp_acpt_new    (tcp_acpt*, u32_t, va_list);

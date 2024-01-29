@@ -2,15 +2,18 @@
 #define __CORE_WIN32_UDP_H__
 
 #include "v4.h"
+#include "io_res.h"
+#include "io_run.h"
+
 #include <fut.h>
 
 extern obj_trait* udp_t    ;
 typedef struct    udp      {
-    obj              head  ;
-    SOCKET           udp   ;
-    HANDLE           udp_io;
-    struct io_sched* sched ;
-    u32_t            flag  ;
+    obj     head  ;
+    SOCKET  udp   ;
+    HANDLE  udp_io;
+    u32_t   flag  ;
+    io_run *run   ;
 }   udp;
 
 bool_t udp_new         (udp*, u32_t, va_list)    ;

@@ -1,6 +1,6 @@
 #include "io_res.h"
 
-#include "io_sched.h"
+#include "io_run.h"
 #include "fut.h"
 
 
@@ -16,14 +16,14 @@ obj_trait* io_res_t = &io_res_trait;
 
 bool_t 
     io_res_new
-        (io_res* par_res, u32_t par_count, va_list par) {
-            par_res->sched = va_arg(par, io_sched*);
-            if (!par_res->sched)                        return false_t;
-            if (trait_of(par_res->sched) != io_sched_t) return false_t;
-
-            par_res->sched = ref(par_res->sched);
-            par_res->stat  = fut_pend           ;
-            par_res->ret   = 0                  ;
+        (io_res* par_res, u32_t par_count, va_list par)                   {
+            io_run* run = 0; if (par_count > 0) run = va_arg(par, io_run*);
+            if (!run)                      return false_t   ;
+            if (trait_of(run) != io_run_t) return false_t   ;
+            mem_set(&par_res->res, 0x00, sizeof(OVERLAPPED));
+            par_res->stat = fut_pend;
+            par_res->run  = ref(run);
+            par_res->ret  = 0       ;
             return true_t;
 }
 
@@ -35,8 +35,8 @@ bool_t
 
 void
     io_res_del  
-        (io_res* par)       {
-            del (par->sched);
+        (io_res* par)     {
+            del (par->run);
 }
 
 u64_t

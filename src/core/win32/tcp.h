@@ -2,16 +2,19 @@
 #define __CORE_WIN32_TCP_H__
 
 #include "v4.h"
+#include "io_run.h"
+
 #include <task.h>
 #include <fut.h>
 
-extern obj_trait* tcp_t	   ;
-typedef struct    tcp      {
-	obj				 head  ;
-	struct io_sched* sched ;
-	SOCKET			 tcp   ;
-	HANDLE			 tcp_io;
-	obj				*addr  ;
+extern obj_trait* tcp_t;
+typedef struct    tcp  {
+	obj		head  ;
+	io_run *run   ;
+	HANDLE  tcp_io;
+	SOCKET  tcp   ;
+	obj	   *addr  ;
+	u64_t   flag  ;
 }	tcp;
 
 bool_t tcp_new    (tcp*, u32_t, va_list);
