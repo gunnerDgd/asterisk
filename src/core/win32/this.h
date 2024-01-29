@@ -9,16 +9,19 @@
 #include <fut.h>
 
 #include "thd.h"
-extern obj_trait *this_t ;
-typedef struct    this   {
-    obj     head         ;
-    sched  *sched        ;
-    task   *task         ;
-    thd    *thd          ;
-    fut    *fut          ;
-    void* (*entry)(void*);
-    void   *ret          ;
-    void   *arg          ;
+#include "io_sched.h"
+
+extern obj_trait *this_t   ;
+typedef struct    this     {
+    obj       head         ;
+    io_sched *io_sched     ;
+    sched    *sched        ;
+    task     *task         ;
+    thd      *thd          ;
+    fut      *fut          ;
+    void*   (*entry)(void*);
+    void     *ret          ;
+    void     *arg          ;
 }   this;
 
 extern __declspec(thread) this* curr;
@@ -27,6 +30,7 @@ bool_t    this_clone   (this*, this*)         ;
 void      this_del     (this*)                ;
 
 thd*      this_thd     ()                     ;
+io_sched* this_io_sched()                     ;
 sched*    this_sched   ()                     ;
 task*     this_task    ()                     ;
 

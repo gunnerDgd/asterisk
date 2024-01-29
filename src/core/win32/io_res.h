@@ -4,16 +4,16 @@
 #include <obj.h>
 #include <fut.h>
 
-#include "io_run.h"
+#include "io_sched.h"
 #include "core.h"
 
 extern obj_trait* io_res_t;
 typedef struct    io_res  {
-	obj		   head;
-	u64_t	   stat;
-	io_run    *run ;
-	OVERLAPPED res ;
-	void*	   ret ;
+	obj		   head ;
+	io_sched  *sched;
+	u64_t	   stat ;
+	OVERLAPPED res  ;
+	void*	   ret  ;
 }	io_res;
 
 bool_t io_res_new  (io_res*, u32_t, va_list);

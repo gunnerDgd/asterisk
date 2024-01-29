@@ -4,15 +4,18 @@
 #include <sched.h>
 #include <fut.h>
 
+#include "io_sched.h"
+
 extern obj_trait* thd_t;
 typedef struct    thd  {
-    obj     head ;
-    sched   sched;
-    u64_t   stat ;
-    void* (*run)(void*);
-    void   *arg;
-    void   *thd;
-    void   *ret;
+    obj      head    ;
+    io_sched io_sched;
+    sched    sched   ;
+    u64_t    stat    ;
+    void*  (*run)(void*);
+    void    *arg;
+    void    *thd;
+    void    *ret;
 }   thd;
 
 bool_t thd_new  (thd*, u32_t, va_list);

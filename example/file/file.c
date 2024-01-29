@@ -1,15 +1,10 @@
-#include <asterisk/file.h>
-#include <asterisk/this.h>
-
-#include <asterisk/io_run.h>
-#include <asterisk/io_serv.h>
+#include <asterisk/core.h>
+#include <asterisk/fs/file.h>
 
 #include <stdio.h>
 
-void async_main()                                 {
-    io_run  *run  = make (io_run_t)  from (0)     ;
-    io_serv *serv = make (io_serv_t) from (1, run);
-    file    *file = make (file_t)    from (1, run);
+void async_main()                      {
+    file *file = make (file_t) from (0);
     if (!file_create_cstr(file, "test2.txt")) {
     if (!file_open_cstr  (file, "test2.txt")) {
         printf ("Failed to Create File\n");
@@ -26,7 +21,6 @@ void async_main()                                 {
     printf("File Write1 : %d\n", fut_ret(fut2));
     printf("File Write2 : %d\n", fut_ret(fut3));
 
-    del(run) ;
-    del(serv);
-    return 0;
+    del(file);
+    return  0;
 }

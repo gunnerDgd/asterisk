@@ -1,18 +1,11 @@
-#include <asterisk/tcp.h>
-#include <asterisk/tcp_acpt.h>
-#include <asterisk/this.h>
-#include <asterisk/v4.h>
-
-#include <asterisk/io_serv.h>
-#include <asterisk/io_run.h>
+#include <asterisk/core.h>
+#include <asterisk/net.h>
 
 #include <stdio.h>
 
-void async_main()                                  {
-    io_run   *run  = make(io_run_t)   from (0)     ;
-    io_serv  *serv = make(io_serv_t)  from (1, run);
-    tcp_acpt* acpt = make(tcp_acpt_t) from (1, run);
-    v4       *addr = make(v4_t)       from (0)     ;
+void async_main()                             {
+    tcp_acpt* acpt = make(tcp_acpt_t) from (0);
+    v4       *addr = make(v4_t)       from (0);
 
     v4_port(addr, 6500);
     if (!tcp_acpt_conn(acpt, addr))          {
@@ -34,7 +27,5 @@ void async_main()                                  {
 
     del(addr);
     del(acpt);
-    del(run) ;
-    del(serv);
     return 0;
 }

@@ -1,17 +1,11 @@
-#include <asterisk/tcp.h>
-#include <asterisk/tcp_acpt.h>
-#include <asterisk/this.h>
-
-#include <asterisk/io_serv.h>
-#include <asterisk/io_run.h>
+#include <asterisk/core.h>
+#include <asterisk/net.h>
 
 #include <stdio.h>
 
-void async_main()                                {
-    io_run  *run  = make(io_run_t)  from (0)     ;
-    io_serv *serv = make(io_serv_t) from (1, run);
-    tcp     *tcp  = make(tcp_t)     from (1, run);
-    v4      *addr = make(v4_t)      from (0);
+void async_main()                       {
+    tcp     *tcp  = make(tcp_t) from (0);
+    v4      *addr = make(v4_t)  from (0);
     if (!addr) return 0;
     if (!tcp)  return 0;
 
@@ -26,8 +20,6 @@ void async_main()                                {
     printf ("Received %s (%d Bytes).\n", buf, await(tcp_recv(tcp, buf, 64)));
 
     drop(buf) ;
-    del (run) ;
-    del (serv);
     del (tcp) ;
     del (addr);
 }

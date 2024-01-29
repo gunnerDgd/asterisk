@@ -28,20 +28,24 @@ bool_t
     this_new
         (this* par_task, u32_t par_count, va_list par)                     {
             thd   *thd   = 0; if (par_count > 0) thd   = va_arg(par, void*);
-            sched *sched = 0; if (par_count > 1) sched = va_arg(par, void*);
-            void  *entry = 0; if (par_count > 2) entry = va_arg(par, void*);
-            void  *arg   = 0; if (par_count > 3) arg   = va_arg(par, void*);
-            if (!entry)                     return false_t; 
-            if (!sched)                     return false_t;
-            if (!thd)                       return false_t;
-            if (trait_of(sched) != sched_t) return false_t;
-            if (trait_of(thd)   != thd_t)   return false_t;
+            void  *entry = 0; if (par_count > 1) entry = va_arg(par, void*);
+            void  *arg   = 0; if (par_count > 2) arg   = va_arg(par, void*);
+            if (!entry)                 return false_t;
+            if (!thd)                   return false_t;
+            if (trait_of(thd) != thd_t) return false_t;
             
-            par_task->fut   = sched_dispatch(sched, this_start, par_task);
-            par_task->thd   = thd  ;
-            par_task->sched = sched;
-            par_task->entry = entry;
-            par_task->arg   = arg  ;
+            io_sched *io_sched = &thd->io_sched; 
+            sched    *sched    = &thd->sched   ;
+            fut      *fut      = sched_dispatch (sched, this_start, par_task);
+            if (!fut)                   return false_t;
+            if (trait_of(fut) != fut_t) return false_t;
+
+            par_task->io_sched = io_sched;
+            par_task->sched    = sched   ;
+            par_task->entry    = entry   ;
+            par_task->arg      = arg     ;
+            par_task->thd      = thd     ;
+            par_task->fut      = fut     ;
             return true_t;
 }
 
@@ -61,6 +65,13 @@ sched*
         if (!curr)                    return 0;
         if (trait_of(curr) != this_t) return 0;
         return curr->sched;
+}
+
+io_sched* 
+    this_io_sched()                           {
+        if (!curr)                    return 0;
+        if (trait_of(curr) != this_t) return 0;
+        return curr->io_sched;
 }
 
 task* 
@@ -110,8 +121,8 @@ void*
 
 fut*
     async
-        (void(*par)(void*), void* par_arg)                                               {
-            this *ret = make (this_t) from (4, this_thd(), this_sched(), par, par_arg);
+        (void(*par)(void*), void* par_arg)                              {
+            this *ret = make (this_t) from (3, this_thd(), par, par_arg);
             if  (!ret)                    return 0;
             if  (trait_of(ret) != this_t) return 0;
             return ret->fut;

@@ -14,26 +14,27 @@ obj_trait thd_trait     = {
 obj_trait* thd_t = &thd_trait;
 
 void*
-    thd_do_run
-        (thd* par)                               {
-            if (!par)                   return -1;
-            if (trait_of(par) != thd_t) return -1;
-            this *this = make (this_t) from      (
-                3          ,
-                par        ,
-                &par->sched,
-                par->run   ,
-                par->arg
-            );
-
-            if (!this)                       return -1;
-            if (trait_of(this) != this_t)    return -1;
-
-            while (!sched_idle(&par->sched)) sched_run(&par->sched);
-            par->stat = fut_ready;
-            return  0;
+    thd_main
+        (thd* par)                                                    {
+            if (!par)                                         return 0;
+            if (trait_of(par) != thd_t)                       return 0;
+            if (!make_at(&par->io_sched, io_sched_t) from(0)) return 0;
+            return par->run(par->arg);
 }
 
+void*
+    thd_do_run
+        (thd* par)                                               {
+            if (!par)                   return -1; this *this = 0;
+            if (trait_of(par) != thd_t) return -1; fut  *fut  = 0;
+            this = make (this_t) from (3, par, thd_main, par); if (trait_of(this) != this_t) return -1;
+            fut  = this->fut                                 ; if (trait_of(fut)  != fut_t)  return -1;
+            
+            while (fut_poll(fut) != fut_ready) sched_run(&par->sched);
+            par->stat = fut_ready;
+            del(fut);
+            return 0;
+}
 
 u64_t  
     thd_do_poll
@@ -61,7 +62,6 @@ bool_t
         (thd* par_thd, u32_t par_count, va_list par)                  {
             void* run = 0; if (par_count > 0) run = va_arg(par, void*);
             void* arg = 0; if (par_count > 1) arg = va_arg(par, void*);
-            
             if (!make_at(&par_thd->sched, sched_t) from(0)) return false_t;
             if (!run)                                       return false_t;
             par_thd->stat = fut_pend;
@@ -96,6 +96,7 @@ void
             if (!par->thd) return;
 
             WaitForSingleObject(par->thd, INFINITE);
+            del(&par->io_sched);
             del(&par->sched)   ;
 }
 
