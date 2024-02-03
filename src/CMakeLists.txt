@@ -87,4 +87,70 @@ if(PRESET_WIN32)
         ws2_32
         Mswsock
     )
+elseif (UNIX AND NOT APPLE)
+    add_library(asterisk STATIC
+        core/linux/epoll/core.h
+        core/linux/epoll/core.c
+
+        core/linux/epoll/heap.h
+        core/linux/epoll/heap.c
+
+        core/linux/epoll/page.h
+        core/linux/epoll/page.c
+
+        core/linux/epoll/thd.h
+        core/linux/epoll/thd.c
+
+        core/linux/epoll/io_sched.h
+        core/linux/epoll/io_sched.c
+
+        core/linux/epoll/this.h
+        core/linux/epoll/this.c
+
+        core/this.h
+        core/thd.h
+        core/io_sched.h
+        core/io_res.h
+        core/core.h
+        core/heap.h
+        core/page.h
+        core.h
+        main.c
+
+        fs/linux/epoll/file.h
+        fs/linux/epoll/file.c
+        fs/file.h
+        fs.h
+
+
+        net/linux/epoll/v4.h
+        net/linux/epoll/v4.c
+
+        net/linux/epoll/tcp_acpt.h
+        net/linux/epoll/tcp_acpt.c
+
+        net/linux/epoll/tcp.h
+        net/linux/epoll/tcp.c
+
+        net/linux/epoll/udp.h
+        net/linux/epoll/udp.c
+
+        net/tcp_acpt.h
+        net/tcp.h
+        net/udp.h
+        net/v4.h
+        net/net.h
+        net.h
+            core/linux/epoll/io_res.h
+            core/linux/epoll/io_res.c
+            core/linux/epoll/io_dev.h
+            core/linux/epoll/io_dev.c
+    )
+
+    target_link_libraries(asterisk PRIVATE
+        crisp
+        crisp-arch
+        crisp-arch-asm
+        pthread
+    )
 endif ()
