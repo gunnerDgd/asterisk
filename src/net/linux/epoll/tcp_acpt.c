@@ -18,25 +18,25 @@ obj_trait* tcp_acpt_t = &tcp_acpt_trait;
 
 i64_t
     tcp_acpt_do_run
-        (tcp_acpt* par, u8_t* par_buf, u64_t par_len, tcp* par_arg)                             {
-            if (!par)                                  return -1     ; struct sockaddr_in  addr ;
-            if (trait_of(par)           != tcp_acpt_t) return -1     ; u64_t  len = sizeof(addr);
-            if (trait_of(par_arg)       != tcp_t)      return -1     ;
-            if (trait_of(&par_arg->dev) == io_dev_t)   return par_arg;
-            if (!io_dev_stat(&par->dev)->in)           {
-                errno = EAGAIN;
-                return 0;
-            }
+        (tcp_acpt* par, u8_t* par_buf, u64_t par_len, tcp* par_tcp)  {
+            if (!par)                            return -1      ;
+            if (trait_of(par)     != tcp_acpt_t) return -1      ;
+            if (trait_of(par_tcp) != tcp_t)      return -1      ;
+            if (!io_poll_in(&par->poll))         goto   run_pend;
 
-            int  res = accept (par->tcp, &addr, &len); if (res < 0) return -1;
-            if (!make_at(&par_arg->dev, io_dev_t) from (2, par->sched, res)) {
-                close(res);
-                return  -1;
-            }
-
-            par_arg->tcp = res;
+            int res = accept (par->tcp, 0, 0);
+            if (res < 0)                                                       goto run_err;
+            if (!make_at(&par_tcp->poll, io_poll_t) from (2, par->sched, res)) goto run_err;
+            par_tcp->tcp = res;
             errno        = 0  ;
-            return par_arg;
+            return par_tcp;
+    run_err :
+            close    (res);
+            errno = EFAULT;
+            return -1;
+    run_pend:
+            errno = EAGAIN;
+            return 0;
 }
 
 bool_t 
@@ -46,11 +46,7 @@ bool_t
 			if (!sched)					            sched = this_io_sched()       ;
 			if (!sched)					       return false_t;
 			if (trait_of(sched) != io_sched_t) return false_t;
-
-			int tcp = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);
-			if (tcp <= 0) return false_t;
 			par_acpt->sched = ref(sched);
-			par_acpt->tcp   = tcp       ;
 			return true_t;
 }
 
@@ -67,36 +63,37 @@ void
 			del (par->sched);
 }
 
-bool_t
-	tcp_acpt_conn
-		(tcp_acpt* par, obj* par_addr)					        {
-			if (!par_addr)					      return false_t;
-			if (!par)						      return false_t;
-			if (trait_of(par)      != tcp_acpt_t) return false_t;
-			if (trait_of(par_addr) == v4_t)       return tcp_acpt_conn_v4(par, par_addr);
-			return false_t;
-}
 
 bool_t 
-	tcp_acpt_conn_v4
-		(tcp_acpt* par, v4* par_addr)							{
-			if (!par_addr)						  return false_t;
-			if (!par)						      return false_t;
-			if (trait_of(par_addr) != v4_t)		  return false_t;
-			if (trait_of(par)      != tcp_acpt_t) return false_t;
+	tcp_acpt_conn
+		(tcp_acpt* par, end* par_end)						   {
+			if (!par_end)						 return false_t;
+			if (!par)						     return false_t;
+			if (trait_of(par_end) != end_t)		 return false_t;
+			if (trait_of(par)     != tcp_acpt_t) return false_t;
+            int tcp = socket                                   (
+                par_end->end.type          ,
+                SOCK_STREAM | SOCK_NONBLOCK,
+                IPPROTO_TCP
+            );
 
-			struct sockaddr_in v4 = par_addr->v4;
-			if (bind  (par->tcp, &v4, sizeof(v4)))                            return false_t;
-			if (listen(par->tcp, -1))			                              return false_t;
-			if (!make_at(&par->dev, io_dev_t) from (2, par->sched, par->tcp)) return false_t;
+            if (tcp <= 0)                                                  return false_t;
+			if (bind  (tcp, &par_end->end, par_end->len))                  return false_t;
+			if (listen(tcp, -1))			                               return false_t;
+			if (!make_at(&par->poll, io_poll_t) from (2, par->sched, tcp)) return false_t;
+
+			par->tcp = tcp;
 			return true_t;
 }
 
 void
 	tcp_acpt_close
-		(tcp_acpt* par)	   {
-			del(par->sched);
-			del(&par->tcp) ;
+		(tcp_acpt* par)	                           {
+		    if (!par)                        return;
+		    if (trait_of(par) != tcp_acpt_t) return;
+		    close(par->tcp)  ;
+			del  (&par->poll);
+			par->tcp = 0;
 }
 
 fut*
@@ -114,7 +111,7 @@ fut*
                 tcp
             );
 
-            if (trait_of(ret) != io_res_t) return 0; fut* fut = io_res_fut(ret);
-            if (trait_of(fut) != fut_t)    return 0; del (ret);
+            if (trait_of(ret) != io_res_t) return 0; fut* fut = io_res_fut(ret); del (ret);
+            if (trait_of(fut) != fut_t)    return 0;
             return fut;
 }

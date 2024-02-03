@@ -3,23 +3,20 @@
 
 #include <stdio.h>
 
-void async_main()                       {
-    tcp     *tcp  = make(tcp_t) from (0);
-    v4      *addr = make(v4_t)  from (0);
-    if (!addr) return 0;
-    if (!tcp)  return 0;
-
-    v4_from_cstr(addr, "127.0.0.1");
-    v4_port     (addr, 6500)       ;
+void async_main()                                                   {
+    end *end = make(end_t) from (2, v4_from_cstr("127.0.0.1"), 6500);
+    tcp *tcp = make(tcp_t) from (0);
+    if (!tcp) return;
+    if (!end) return;
 
     u8_t* buf  = new (u8_t[64]);
-    if  (!await(tcp_conn(tcp, addr))) return 1;
+    if  (!await(tcp_conn(tcp, end))) return;
 
     mem_set(buf, 0x00, 64);
     printf ("Connected\n");
     printf ("Received %s (%d Bytes).\n", buf, await(tcp_recv(tcp, buf, 64)));
 
-    drop(buf) ;
-    del (tcp) ;
-    del (addr);
+    drop(buf);
+    del (tcp);
+    del (end);
 }

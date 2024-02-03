@@ -2,13 +2,12 @@
 #define __TCP_ACPT_H__
 
 #include <fut.h>
-#include "v4.h"
+#include "end.h"
 
 extern obj_trait* tcp_acpt_t;
 typedef struct    tcp_acpt { u8_t tcp_acpt[128]; } tcp_acpt;
 
-bool_t tcp_acpt_conn   (tcp_acpt*, obj*);
-bool_t tcp_acpt_conn_v4(tcp_acpt*, v4*) ;
+bool_t tcp_acpt_conn   (tcp_acpt*, end*);
 void   tcp_acpt_close  (tcp_acpt*)		;
 fut*   tcp_acpt_run    (tcp_acpt*)		;
 

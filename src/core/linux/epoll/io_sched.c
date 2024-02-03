@@ -1,5 +1,5 @@
 #include "io_sched.h"
-#include "io_dev.h"
+#include "io_poll.h"
 #include "this.h"
 
 #include "core.h"
@@ -42,14 +42,15 @@ u64_t
             if (trait_of(par) != io_sched_t) return 0;
 
             u64_t ret = 0;
-            for (u64_t i = 0 ; i < par->pend ; ++i)    {
-                io_dev *dev = par->res[i].data.ptr     ;
-                if (!dev)                      continue;
-                if (trait_of(dev) != io_dev_t) continue;
-                io_dev_stat(dev)->in = 1;
+            for (u64_t i = 0 ; i < par->pend ; ++i)        {
+                io_poll *poll = par->res[i].data.ptr       ;
+                if (!poll)                         continue;
+                if (trait_of(poll) != io_poll_t)   continue;
+                poll->poll = par->res[i];
                 ++ret;
             }
 
+            par->pend = 0;
             return ret;
 }
 

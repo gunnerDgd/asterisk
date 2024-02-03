@@ -104,6 +104,12 @@ elseif (UNIX AND NOT APPLE)
         core/linux/epoll/io_sched.h
         core/linux/epoll/io_sched.c
 
+        core/linux/epoll/io_res.h
+        core/linux/epoll/io_res.c
+
+        core/linux/epoll/io_poll.h
+        core/linux/epoll/io_poll.c
+
         core/linux/epoll/this.h
         core/linux/epoll/this.c
 
@@ -122,9 +128,11 @@ elseif (UNIX AND NOT APPLE)
         fs/file.h
         fs.h
 
-
         net/linux/epoll/v4.h
         net/linux/epoll/v4.c
+
+        net/linux/epoll/v6.h
+        net/linux/epoll/v6.c
 
         net/linux/epoll/tcp_acpt.h
         net/linux/epoll/tcp_acpt.c
@@ -135,16 +143,17 @@ elseif (UNIX AND NOT APPLE)
         net/linux/epoll/udp.h
         net/linux/epoll/udp.c
 
+        net/linux/epoll/end.h
+        net/linux/epoll/end.c
+
         net/tcp_acpt.h
         net/tcp.h
         net/udp.h
+        net/end.h
+        net/v6.h
         net/v4.h
         net/net.h
         net.h
-            core/linux/epoll/io_res.h
-            core/linux/epoll/io_res.c
-            core/linux/epoll/io_dev.h
-            core/linux/epoll/io_dev.c
     )
 
     target_link_libraries(asterisk PRIVATE
