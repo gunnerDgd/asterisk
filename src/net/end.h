@@ -1,8 +1,10 @@
-//
-// Created by enbay on 2/3/24.
-//
+#ifndef __NET_END_H__
+#define __NET_END_H__
 
-#ifndef ASTERISK_ALL_END_H
-#define ASTERISK_ALL_END_H
+#ifdef PRESET_WIN32
+#include "win32/end.h"
+#elif  PRESET_LINUX
+#include "linux/epoll/end.h"
+#endif
 
-#endif //ASTERISK_ALL_END_H
+#endif

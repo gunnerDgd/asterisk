@@ -20,6 +20,7 @@ bool_t tcp_new  (tcp*, u32_t, va_list);
 bool_t tcp_clone(tcp*, tcp*)	      ;
 void   tcp_del  (tcp*)			      ;
 
+bool_t tcp_open (tcp*, obj_trait*)    ;
 fut*   tcp_conn (tcp*, end*)		  ;
 void   tcp_close(tcp*)				  ;
 

@@ -51,7 +51,7 @@ i64_t
                 par_buf      ,
                 par_len      ,
                 par->flag    ,
-                &par_end->end,
+                &par_end->all,
                 &par_end->len
             );
 
@@ -86,7 +86,7 @@ i64_t
                 par_buf      ,
                 par_len      ,
                 par->flag    ,
-                &par_end->end,
+                &par_end->all,
                 par_end->len
             );
 
@@ -100,13 +100,6 @@ bool_t
             if (!sched)                        sched = this_io_sched();
             if (!sched)                        return false_t;
             if (trait_of(sched) != io_sched_t) return false_t;
-            par_udp->udp = socket                            (
-                AF_INET6                  ,
-                SOCK_DGRAM | SOCK_NONBLOCK,
-                IPPROTO_UDP
-            );
-
-            if (par_udp->udp < 0) return false_t;
             par_udp->sched = ref(sched);
             return true_t;
 }
@@ -124,23 +117,35 @@ void
             del      (par->sched);
 }
 
+bool_t
+    udp_open
+        (udp* par, obj_trait* par_af)                              {
+            if (!par)                   return false_t; int af = -1;
+            if (trait_of(par) != udp_t) return false_t;
+            if (par->udp > 0)           return true_t ;
+            if (par_af == v4_t)         af = AF_INET  ;
+            if (par_af == v6_t)         af = AF_INET6 ;
+            if (af == -1)               return false_t;
+            par->udp = socket                         (
+                af                        ,
+                SOCK_DGRAM | SOCK_NONBLOCK,
+                IPPROTO_UDP
+            );
+
+            if (par->udp <= 0)                                                  return false_t;
+            if (!make_at(&par->poll, io_poll_t) from (2, par->sched, par->udp)) return false_t;
+            return true_t;
+}
+
 bool_t 
     udp_conn
-        (udp* par, end* par_end)                          {
-            if (!par_end)                   return false_t;
-            if (!par)                       return false_t;
-            if (trait_of(par)     != udp_t) return false_t;
-            if (trait_of(par_end) != end_t) return false_t;
-
-            int    udp = socket(par_end->end.type, SOCK_DGRAM | SOCK_NONBLOCK, IPPROTO_UDP);
-            close (par->udp)  ;
-            del   (&par->poll);
-
-            if (udp <= 0)                                                  return false_t;
-            if (bind(udp, &par_end->end, par_end->len))                    return false_t;
-            if (!make_at(&par->poll, io_poll_t) from (2, par->sched, udp)) return false_t;
-
-            par->udp = udp ;
+        (udp* par, end* par_end)                                                              {
+            if (!par_end)                                                       return false_t;
+            if (!par)                                                           return false_t;
+            if (trait_of(par)     != udp_t)                                     return false_t;
+            if (trait_of(par_end) != end_t)                                     return false_t;
+            if (!udp_open(par, end_af(par_end)))                                return false_t;
+            if (bind(par->udp, &par_end->all, par_end->len))                    return false_t;
             return true_t;
 }
 

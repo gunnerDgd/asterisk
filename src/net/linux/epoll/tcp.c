@@ -1,4 +1,6 @@
 #include "tcp.h"
+#include "v4.h"
+#include "v6.h"
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -107,22 +109,39 @@ void
 			del(par->sched);
 }
 
-fut*
-	tcp_conn
-		(tcp* par, end* par_end)				    {
-			if (!par_end)				    return 0;
-			if (!par)					    return 0;
-			if (trait_of(par_end) != end_t) return 0;
-			if (trait_of(par)     != tcp_t) return 0;
-            par->tcp = socket                       (
-                par_end->end.type          ,
-                SOCK_STREAM | SOCK_NONBLOCK,
-                IPPROTO_TCP
+bool_t
+    tcp_open
+        (tcp* par, obj_trait* par_af)                              {
+            if (!par)                   return false_t; int af = -1;
+            if (trait_of(par) != tcp_t) return false_t;
+            if (par->tcp > 0)           return true_t ;
+            if (par_af == v4_t)         af = AF_INET  ;
+            if (par_af == v6_t)         af = AF_INET6 ;
+            if (af == -1)               return false_t;
+            par->tcp = socket                         (
+                    af                         ,
+                    SOCK_STREAM | SOCK_NONBLOCK,
+                    IPPROTO_TCP
             );
 
-            if (par->tcp <= 0)                                                  return 0;
-            if (!make_at(&par->poll, io_poll_t) from (2, par->sched, par->tcp)) return 0;
-            io_res *ret = make (io_res_t) from (
+            if (par->tcp <= 0)                                    return false_t;
+            if (!make_at(&par->poll, io_poll_t) from (2, par->sched, par->tcp)) {
+                close(par->tcp);
+                par->tcp    = 0;
+                return false_t;
+            }
+            return true_t;
+}
+
+fut*
+	tcp_conn
+		(tcp* par, end* par_end)				         {
+			if (!par_end)				         return 0;
+			if (!par)					         return 0;
+			if (trait_of(par_end) != end_t)      return 0;
+			if (trait_of(par)     != tcp_t)      return 0;
+			if (!tcp_open(par, end_af(par_end))) return 0;
+            io_res *ret = make (io_res_t) from           (
                 4          ,
                 par        ,
                 tcp_do_conn,
@@ -133,7 +152,7 @@ fut*
             if (trait_of(ret) != io_res_t) return 0; fut* fut = io_res_fut(ret); del (ret);
             if (trait_of(fut) != fut_t)    return 0;
 
-            int res = connect(par->tcp, &par_end->end, par_end->len);
+            int res = connect(par->tcp, &par_end->all, par_end->len);
             if (!res)                {
                 ret->stat = fut_ready;
                 ret->ret  = 1        ;

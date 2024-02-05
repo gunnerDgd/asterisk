@@ -11,8 +11,7 @@ extern obj_trait* tcp_acpt_t;
 typedef struct    tcp_acpt  {
 	obj       head ;
 	io_sched *sched;
-	io_poll   poll ;
-	int       tcp  ;
+	tcp       tcp  ;
 }	tcp_acpt;
 
 bool_t tcp_acpt_new  (tcp_acpt*, u32_t, va_list);
