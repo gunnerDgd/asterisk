@@ -13,7 +13,10 @@ add_library(asterisk-include STATIC
     ../include/asterisk/net/tcp_acpt.h
     ../include/asterisk/net/tcp.h
     ../include/asterisk/net/udp.h
+    
+    ../include/asterisk/net/end.h
     ../include/asterisk/net/v4.h
+    ../include/asterisk/net/v6.h
     ../include/asterisk/net.h
 )
 
@@ -59,8 +62,14 @@ if(PRESET_WIN32)
         net/win32/net.h
         net/win32/net.c
 
+        net/win32/end.h
+        net/win32/end.c
+
         net/win32/v4.h
         net/win32/v4.c
+
+        net/win32/v6.h
+        net/win32/v6.c
 
         net/win32/tcp_acpt.h
         net/win32/tcp_acpt.c
@@ -74,7 +83,11 @@ if(PRESET_WIN32)
         net/tcp_acpt.h
         net/tcp.h
         net/udp.h
+
+        net/end.h
         net/v4.h
+        net/v6.h
+        
         net/net.h
         net.h
     )

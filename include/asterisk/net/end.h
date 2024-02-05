@@ -11,5 +11,6 @@ struct v6* end_as_v6(end*);
 u16_t      end_port (end*);
 bool_t     end_v4   (end*);
 bool_t     end_v6   (end*);
+obj_trait* end_af   (end*);
 
 #endif

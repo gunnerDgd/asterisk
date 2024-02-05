@@ -1,5 +1,8 @@
 #include "tcp.h"
 
+#include "v4.h"
+#include "v6.h"
+
 obj_trait tcp_trait	    = {
 	.on_new	  = &tcp_new  ,
 	.on_clone = &tcp_clone,
@@ -14,33 +17,14 @@ bool_t
 	tcp_new
 		(tcp* par_tcp, u32_t par_count, va_list par)							  {
 			io_sched* sched = 0; if (par_count > 0) sched = va_arg(par, io_sched*);
-			if (!sched)						   sched = this_io_sched();
-			if (!sched)						   return false_t;
-			if (trait_of(sched) != io_sched_t) return false_t;
-			par_tcp->tcp = WSASocket (
-				AF_INET		      ,
-				SOCK_STREAM		  , 
-				0				  , 
-				0				  ,
-				0				  ,
-				WSA_FLAG_OVERLAPPED
-			);
-			
-			if (par_tcp->tcp == INVALID_SOCKET) return false_t;
-			par_tcp->tcp_io = CreateIoCompletionPort		  (
-				par_tcp->tcp,
-				sched->hnd  ,
-				sched		,
-				0
-			);
-
-			if (!par_tcp->tcp_io)		 {
-				closesocket(par_tcp->tcp);
-				return false_t;
-			}
-
-			par_tcp->sched = ref(sched);
-			par_tcp->flag  = 0		   ;
+			if (!sched)								sched = this_io_sched()		  ;
+			if (!sched)									return false_t;
+			if (trait_of(sched) != io_sched_t)			return false_t;
+			if (!make_at(&par_tcp->end, end_t) from(0)) return false_t;
+			par_tcp->tcp_io = 0				;
+			par_tcp->tcp    = INVALID_SOCKET;
+			par_tcp->sched  = ref(sched)    ;
+			par_tcp->flag   = 0		        ;
 			return true_t;
 }
 
@@ -53,101 +37,117 @@ bool_t
 void
 	tcp_del
 		(tcp* par)				   {
-			del		   (par->sched);
 			closesocket(par->tcp)  ;
+			del		   (par->sched);
+			
 }
 
-bool_t
-	tcp_conn_v4_do
-		(tcp* par)										    {
-			io_res *ret = make(io_res_t) from(1, par->sched);
-			v4	   *v4  = par->addr						    ;
-			if (!ret)					   return false_t;
-			if (!v4)					   return false_t;
-			if (trait_of(ret) != io_res_t) return false_t;
-			if (trait_of(v4)  != v4_t)     return false_t;
-			bool_t res = ConnectEx (
-				par->tcp	  ,
-				&v4->v4		  ,
-				sizeof(v4->v4),
-				0			  ,
-				0			  ,
-				0			  ,
-				&ret->res
+bool_t 
+	tcp_open
+		(tcp* par, obj_trait* par_af)											{
+			if (!par)								 return false_t; int af = -1;
+			if (trait_of(par) != tcp_t)				 return false_t;
+			if (par->tcp != INVALID_SOCKET)			 return false_t;
+			if (!make_at(&par->end, end_t) from (0)) return false_t;
+			if (par_af == v4_t) af = AF_INET  ;
+			if (par_af == v6_t) af = AF_INET6 ;
+			if (af == -1)		return false_t;
+			par->tcp = WSASocket			  (
+				af				  ,
+				SOCK_STREAM		  ,
+				IPPROTO_TCP		  ,
+				0				  ,
+				0				  ,
+				WSA_FLAG_OVERLAPPED
 			);
 
-			if (!res && WSAGetLastError() != ERROR_IO_PENDING)
-				return false_t;
+			if (par->tcp == INVALID_SOCKET) return false_t;
+			par->tcp_io = CreateIoCompletionPort		  (
+				par->tcp	   ,
+				par->sched->hnd,
+				par->sched	   , 
+				0
+			);
 
-			fut*   fut = io_res_fut(ret);
-			await (fut);
-			del   (fut);
-			del   (ret);
+			if (!par->tcp_io)		     {
+				closesocket(par->tcp)    ;
+				par->tcp = INVALID_SOCKET;
+				return false_t;
+			}
 			return true_t;
 }
 
-fut*
-	tcp_conn_v4
-		(tcp* par, v4* par_v4)				           {
-			if (!par_v4)					   return 0;
-			if (!par)					       return 0;
-			if (trait_of(par_v4) != v4_t)	   return 0;
-			if (trait_of(par)    != tcp_t)	   return 0;
+bool_t
+	tcp_conn_do
+		(tcp* par)																						     {
+			if (trait_of(par) != tcp_t)    goto conn_failed; io_res* ret = make(io_res_t) from(1, par->sched);
+			if (trait_of(ret) != io_res_t) goto conn_failed;
+			bool_t  res = ConnectEx						   (
+				par->tcp	 ,
+				&par->end.all,
+				par->end.len ,
+				0			 ,
+				0			 ,
+				0			 ,
+				&ret->res
+			);
 
-			if (par->tcp    == INVALID_SOCKET) return 0;
-			if (par->tcp_io == NULL)           return 0;
+			if (!res && WSAGetLastError() != ERROR_IO_PENDING) {
+				tcp_close(par);
+				del	     (ret);
+				return false_t;
+			}
 
-			v4  *v4 = make (v4_t) from (0);
-			if (!v4)									 goto conn_failed;
-			if (trait_of(v4) != v4_t)					 goto conn_failed;
-			if (bind(par->tcp, &v4->v4, sizeof(v4->v4))) goto conn_failed;
-			if (!clone_at(v4, par_v4))					 goto conn_failed;
-			par->addr = v4;
-
-			return async(tcp_conn_v4_do, par);
-
+			fut*     fut = io_res_fut(ret);
+			await   (fut);
+			del     (fut);
+			del     (ret);
+			return true_t;
 	conn_failed:
-			closesocket(par->tcp)		;
-			par->tcp    = INVALID_SOCKET;
-			par->tcp_io = 0			    ;
-
-			return 0;
+			tcp_close(par);
+			return false_t;
 }
 
 fut*
 	tcp_conn
-		(tcp* par, obj* par_addr)				{
-			if (!par_addr)				return 0;
-			if (!par)					return 0;
-			if (trait_of(par) != tcp_t) return 0;
+		(tcp* par, end* par_end)						 {
+			if (trait_of(par_end) != end_t)		 return 0;
+			if (trait_of(par)     != tcp_t)	     return 0;
+			if (!tcp_open(par, end_af(par_end))) return 0; 
+			
+			par->end.af = par_end->af;
+			if (bind(par->tcp, &par->end.all, par->end.len)) {
+				tcp_close(par);
+				return 0;
+			}
 
-			if (trait_of(par_addr) == v4_t) return tcp_conn_v4(par, par_addr);
-			return 0;
+			par->end.all = par_end->all;
+			par->end.len = par_end->len;
+			return async(tcp_conn_do, par);
 }
 
 void 
 	tcp_close
-		(tcp* par)				 {
-			closesocket(par->tcp); 
+		(tcp* par)							  {
+			if (!par)					return;
+			if (trait_of(par) != tcp_t) return;
+			closesocket(par->tcp)		;
+			del		   (&par->end)		;
+			par->tcp_io = 0				;
+			par->tcp    = INVALID_SOCKET;
 }
 
 fut*
 	tcp_send
-		(tcp* par, u8_t* par_buf, u64_t par_len)       {
-			if (!par_len)				       return 0;
-			if (!par_buf)				       return 0;
-			if (!par)					       return 0;
+		(tcp* par, u8_t* par_buf, u64_t par_len) {
+			if (!par_len)				return 0;
+			if (!par_buf)				return 0;
+			if (!par)					return 0;
+			if (trait_of(par) != tcp_t) return 0; 
 			
-			if (trait_of(par) != tcp_t)		   return 0;
-			if (par->tcp    == INVALID_SOCKET) return 0;
-			if (par->tcp_io == NULL)           return 0;
-
-			io_res *ret = make (io_res_t) from (1, par->sched);
-			if (!ret)					   return 0;
-			if (trait_of(ret) != io_res_t) return 0;
-
-			WSABUF buf = { .buf = par_buf, .len = par_len  } ;
-			i32_t  res = WSASend (
+			io_res* ret = make(io_res_t) from(1, par->sched) ; if (trait_of(ret) != io_res_t) return 0;
+			WSABUF  buf = { .buf = par_buf, .len = par_len  };
+			i32_t   res = WSASend						     (
 				par->tcp ,
 				&buf	 ,
 				1		 ,
@@ -159,9 +159,9 @@ fut*
 
 			fut* fut = io_res_fut(ret);
 			del (ret);
-			if (res && WSAGetLastError() != ERROR_IO_PENDING) {
-				ret->stat = fut_err;
-				return fut;
+			if  (res && WSAGetLastError() != ERROR_IO_PENDING) {
+				 ret->stat = fut_err;
+				 return fut			;
 			}
 			return fut ;
 }
@@ -174,12 +174,9 @@ fut*
 			if (!par)					   return 0;
 			if (trait_of(par) != tcp_t)    return 0;
 
-			io_res *ret = make (io_res_t) from (1, par->sched);
-			if (!ret)					   return 0;
-			if (trait_of(ret) != io_res_t) return 0;
-
-			WSABUF buf = { .buf = par_buf, .len = par_len };
-			i32_t  res = WSARecv (
+			io_res *ret = make (io_res_t) from (1, par->sched); if (trait_of(ret) != io_res_t) return 0;
+			WSABUF buf  = { .buf = par_buf, .len = par_len }  ;
+			i32_t  res  = WSARecv							  (
 				par->tcp  ,
 				&buf	  ,
 				1		  ,
@@ -191,9 +188,9 @@ fut*
 
 			fut* fut = io_res_fut(ret);
 			del (ret);
-			if (res && WSAGetLastError() != ERROR_IO_PENDING) {
-				ret->stat = fut_err;
-				return fut;
+			if  (res && WSAGetLastError() != ERROR_IO_PENDING) {
+			 	 ret->stat = fut_err;
+				 return fut;
 			}
 			return fut ;
 }
