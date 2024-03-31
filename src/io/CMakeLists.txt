@@ -1,0 +1,24 @@
+if    (UNIX AND NOT APPLE)
+    add_library (asterisk-io STATIC
+        epoll/io_poll.h
+        epoll/io_poll.c
+
+        epoll/io_res.h
+        epoll/io_res.c
+
+        epoll/io_sched.h
+        epoll/io_sched.c
+
+        io_sched.h
+        io_poll.h
+        io_res.h
+    )
+
+    add_library (asterisk-io-include STATIC
+        ../../include/io.h
+        ../../include/io/io_sched.h
+    )
+
+    set_target_properties(asterisk-io-include PROPERTIES LINKER_LANGUAGE C)
+    target_link_libraries(asterisk-io crisp)
+endif ()

@@ -1,7 +1,7 @@
 #ifndef __NET_WIN32_NET_H__
 #define __NET_WIN32_NET_H__
 
-#include "../../core.h"
+#include "../../io.h"
 
 extern LPFN_CONNECTEX    ConnectEx       ;
 extern GUID			     ConnectExGuid   ;

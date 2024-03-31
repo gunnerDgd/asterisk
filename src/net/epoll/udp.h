@@ -1,19 +1,18 @@
-#ifndef __NET_WIN32_UDP_H__
-#define __NET_WIN32_UDP_H__
+#ifndef __NET_EPOLL_UDP_H__
+#define __NET_EPOLL_UDP_H__
+
+#include <core.h>
 
 #include "../../io.h"
-#include "net.h"
 #include "end.h"
-
-#include <fut.h>
 
 extern obj_trait* udp_t;
 typedef struct    udp  {
-    obj       head  ;
-    io_sched *sched ;
-    HANDLE    udp_io;
-    SOCKET    udp   ;
-    u32_t     flag  ;
+    obj       head ;
+    io_sched *sched;
+    u32_t     flag ;
+    io_poll   poll ;
+    int       udp  ;
 }   udp;
 
 bool_t udp_new      (udp*, u32_t, va_list)    ;

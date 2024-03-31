@@ -1,18 +1,17 @@
-#ifndef __FS_WIN32_FILE_H__
-#define __FS_WIN32_FILE_H__
+#ifndef __FS_LINUX_EPOLL_FILE_H__
+#define __FS_LINUX_EPOLL_FILE_H__
 
-#include <obj.h>
-#include <str.h>
-#include <fut.h>
+#include <core.h>
+#include <collections.h>
 
 #include "../../io.h"
 
-extern obj_trait* file_t;
-typedef struct    file  {
-    obj       head   ;
-    io_sched *sched  ;
-    void     *file_io;
-    void     *file   ;
+struct io_sched;
+extern obj_trait* file_t  ;
+typedef struct    file    {
+    obj              head ;
+    struct io_sched *sched;
+    int              file ;
 }   file;
 
 bool_t file_new        (file*, u32_t, va_list);

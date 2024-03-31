@@ -1,1 +1,1 @@
-add_subdirectory(crisp)
+add_subdirectory(crisp/src)

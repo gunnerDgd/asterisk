@@ -1,7 +1,7 @@
 #ifndef __NET_WIN32_TCP_H__
 #define __NET_WIN32_TCP_H__
 
-#include "../../core.h"
+#include "../../io.h"
 #include "net.h"
 #include "end.h"
 
