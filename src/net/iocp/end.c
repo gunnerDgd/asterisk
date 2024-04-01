@@ -1,16 +1,16 @@
 #include "end.h"
-#include <endian.h>
 
 #include "v4.h"
 #include "v6.h"
 
-obj_trait end_trait     = {
-    .on_new   = &end_new  ,
-    .on_clone = &end_clone,
-    .on_ref   = 0         ,
-    .on_del   = &end_del  ,
-    .size     = sizeof(end)
-};
+obj_trait end_trait = make_trait (
+    end_new    ,
+    end_clone  ,
+    null_t     ,
+    end_del    ,
+    sizeof(end),
+    null_t
+);
 
 obj_trait* end_t = &end_trait;
 
@@ -76,9 +76,8 @@ bool_t
 
 obj_trait* 
     end_af
-        (end* par)                              {
-            if (!par)                   return 0;
-            if (trait_of(par) != end_t) return 0;
+        (end* par)                                   {
+            if (trait_of(par) != end_t) return null_t;
             switch (par->af)          {
             case AF_INET : return v4_t;
             case AF_INET6: return v6_t;
@@ -88,28 +87,24 @@ obj_trait*
 
 struct v4*
     end_as_v4
-        (end* par)                              {
-            if (!par)                   return 0;
-            if (trait_of(par) != end_t) return 0;
-            if (!end_v4 (par))          return 0;
+        (end* par)                                   {
+            if (trait_of(par) != end_t) return null_t;
+            if (!end_v4 (par))          return null_t;
+            v4* ret = make (v4) from (0);
 
-            v4* ret = make (v4_t) from (0);
-            if (!ret)                  return 0;
-            if (trait_of(ret) != v4_t) return 0;
+            if (trait_of(ret) != v4_t) return null_t;
             ret->v4 = par->v4.sin_addr;
             return ret;
 }
 
 struct v6*
     end_as_v6
-        (end* par)                              {
-            if (!par)                   return 0;
-            if (trait_of(par) != end_t) return 0;
-            if (!end_v6 (par))          return 0;
+        (end* par)                                   {
+            if (trait_of(par) != end_t) return null_t;
+            if (!end_v6 (par))          return null_t;
+            v6* ret = make (v6) from (0);
 
-            v6* ret = make (v6_t) from (0);
-            if (!ret)                  return 0;
-            if (trait_of(ret) != v6_t) return 0;
+            if (trait_of(ret) != v6_t) return null_t;
             ret->v6 = par->v6.sin6_addr;
             return ret;
 }
@@ -117,7 +112,6 @@ struct v6*
 u16_t
     end_port
         (end* par)                              {
-            if (!par)                   return 0;
             if (trait_of(par) != end_t) return 0;
             switch (par->len)                                       {
                 case sizeof(par->v4): return be16(par->v4.sin_port) ;

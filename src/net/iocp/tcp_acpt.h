@@ -1,11 +1,10 @@
 #ifndef __NET_WIN32_TCP_ACPT_H__
 #define __NET_WIN32_TCP_ACPT_H__
 
-#include "../../io.h"
 #include "tcp.h"
 #include "end.h"
 
-#include <fut.h>
+#include <core.h>
 
 extern obj_trait* tcp_acpt_t;
 typedef struct    tcp_acpt  {

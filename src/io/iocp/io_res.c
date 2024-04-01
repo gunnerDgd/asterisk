@@ -2,21 +2,40 @@
 #include "io_sched.h"
 
 
-obj_trait io_res_trait     = {
-	.on_new	  = &io_res_new  ,
-	.on_clone = &io_res_clone,
-	.on_ref   = 0            ,
-	.on_del   = &io_res_del  ,
-	.size	  = sizeof(io_res)
-};
+obj_trait io_res_trait = make_trait (
+    io_res_new    ,
+    io_res_clone  ,
+    null_t        ,
+    io_res_del    ,
+    sizeof(io_res),
+    null_t
+);
 
 obj_trait* io_res_t = &io_res_trait;
+
+u64_t
+    io_res_do_poll
+        (io_res* par)                                    {
+            if (trait_of(par) != io_res_t) return fut_err;
+            return par->stat;
+}
+
+void*
+    io_res_do_ret
+        (io_res* par)                                   {
+            if (trait_of(par) != io_res_t) return null_t;
+            return par->ret;
+}
+
+fut_ops io_res_fut_ops = make_fut_ops (
+    io_res_do_poll,
+    io_res_do_ret
+);
 
 bool_t 
     io_res_new
         (io_res* par_res, u32_t par_count, va_list par)                           {
             io_sched* sched = 0; if (par_count > 0) sched = va_arg(par, io_sched*);
-            if (!sched)                        return false_t;
             if (trait_of(sched) != io_sched_t) return false_t;
             mem_set(&par_res->res, 0x00, sizeof(OVERLAPPED));
             par_res->sched = ref(sched);
@@ -37,33 +56,11 @@ void
             del (par->sched);
 }
 
-u64_t
-    io_res_do_poll
-        (io_res* par)                                    {
-            if (!par)                      return fut_err;
-            if (trait_of(par) != io_res_t) return fut_err;
-            return par->stat;
-}
-
-void*
-    io_res_do_ret
-        (io_res* par)                                    {
-            if (!par)                      return fut_err;
-            if (trait_of(par) != io_res_t) return fut_err;
-            return par->ret;
-}
-
-fut_ops io_res_fut_ops   = {
-    .poll = &io_res_do_poll,
-    .ret  = &io_res_do_ret
-};
-
-struct fut*
+fut*
     io_res_fut
         (io_res* par)                              {
-            if (!par)                      return 0;
             if (trait_of(par) != io_res_t) return 0;
-            return make (fut_t) from               (
+            return make (fut) from                 (
                 2              ,
                 &io_res_fut_ops,
                 par

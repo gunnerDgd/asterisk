@@ -1,5 +1,5 @@
-#ifndef __IO_H__
-#define __IO_H__
+#ifndef __IO_ALL_H__
+#define __IO_ALL_H__
 
 #include "io/io_res.h"
 #include "io/io_sched.h"

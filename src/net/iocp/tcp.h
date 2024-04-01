@@ -1,21 +1,18 @@
-#ifndef __NET_WIN32_TCP_H__
-#define __NET_WIN32_TCP_H__
+#ifndef __NET_IOCP_TCP_H__
+#define __NET_IOCP_TCP_H__
 
-#include "../../io.h"
 #include "net.h"
 #include "end.h"
 
-#include <task.h>
-#include <fut.h>
+#include <core.h>
 
 extern obj_trait* tcp_t;
 typedef struct    tcp  {
 	obj		  head  ;
 	io_sched *sched ;
 	u64_t     flag  ;
-	HANDLE    tcp_io;
-	SOCKET    tcp   ;
-	end	      end   ;
+	any_t     tcp_io;
+	any_t     tcp   ;
 }	tcp;
 
 bool_t tcp_new    (tcp*, u32_t, va_list);

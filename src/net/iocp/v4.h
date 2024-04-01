@@ -1,8 +1,8 @@
-#ifndef __NET_WIN32_V4_H__
-#define __NET_WIN32_V4_H__
+#ifndef __NET_IOCP_V4_H__
+#define __NET_IOCP_V4_H__
 
-#include <obj.h>
-#include <str.h>
+#include <core.h>
+#include <collections.h>
 
 #include "net.h"
 
@@ -12,9 +12,9 @@ typedef struct    v4   {
     struct in_addr v4  ;
 }   v4;
 
-v4*    v4_from_int (u32_t)      ;
-v4*    v4_from_str (str*)       ;
-v4*    v4_from_cstr(const char*);
+v4*    make_v4_cstr(const char*);
+v4*    make_v4_int (u32_t)      ;
+v4*    make_v4     (str*)       ;
 
 bool_t v4_new      (v4*, u32_t, va_list);
 bool_t v4_clone    (v4*, v4*)           ;

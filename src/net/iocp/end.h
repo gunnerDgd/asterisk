@@ -1,7 +1,6 @@
-#ifndef __NET_WIN32_END_H__
-#define __NET_WIN32_END_H__
+#ifndef __NET_IOCP_END_H__
+#define __NET_IOCP_END_H__
 
-#include <obj.h>
 #include "net.h"
 
 extern obj_trait *end_t     ;

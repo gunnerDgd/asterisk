@@ -1,11 +1,8 @@
-#ifndef __CORE_WIN32_IO_RES_H__
-#define __CORE_WIN32_IO_RES_H__
+#ifndef __IOCP_IO_RES_H__
+#define __IOCP_IO_RES_H__
 
-#include <obj.h>
-#include <fut.h>
-
+#include <core.h>
 #include "io_sched.h"
-#include "core.h"
 
 extern obj_trait* io_res_t;
 typedef struct    io_res  {
@@ -14,6 +11,7 @@ typedef struct    io_res  {
 	u64_t	   stat ;
 	OVERLAPPED res  ;
 	void*	   ret  ;
+	void*	   arg  ;
 }	io_res;
 
 bool_t io_res_new  (io_res*, u32_t, va_list);

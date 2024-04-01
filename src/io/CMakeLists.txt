@@ -22,3 +22,25 @@ if    (UNIX AND NOT APPLE)
     set_target_properties(asterisk-io-include PROPERTIES LINKER_LANGUAGE C)
     target_link_libraries(asterisk-io crisp)
 endif ()
+
+if   (WIN32)
+    add_library(asterisk-io STATIC
+        iocp/io_sched.h
+        iocp/io_sched.c
+
+        iocp/io_res.h
+        iocp/io_res.c
+
+        io_sched.h
+        io_poll.h
+        io_res.h
+    )
+
+    add_library (asterisk-io-include STATIC
+            ../../include/io.h
+            ../../include/io/io_sched.h
+    )
+
+    set_target_properties(asterisk-io-include PROPERTIES LINKER_LANGUAGE C)
+    target_link_libraries(asterisk-io crisp)
+endif()

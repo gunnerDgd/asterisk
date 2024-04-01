@@ -1,10 +1,8 @@
-#ifndef __FS_WIN32_FILE_H__
-#define __FS_WIN32_FILE_H__
+#ifndef __IOCP_FILE_H__
+#define __IOCP_FILE_H__
 
-#include <obj.h>
-#include <str.h>
-#include <fut.h>
-
+#include <core.h>
+#include <collections.h>
 #include "../../io.h"
 
 extern obj_trait* file_t;

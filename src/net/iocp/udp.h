@@ -1,11 +1,10 @@
-#ifndef __NET_WIN32_UDP_H__
-#define __NET_WIN32_UDP_H__
+#ifndef __NET_IOCP_UDP_H__
+#define __NET_IOCP_UDP_H__
 
-#include "../../io.h"
 #include "net.h"
 #include "end.h"
 
-#include <fut.h>
+#include <core.h>
 
 extern obj_trait* udp_t;
 typedef struct    udp  {
