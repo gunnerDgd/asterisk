@@ -11,6 +11,7 @@ typedef struct    file  {
     io_sched *sched  ;
     void     *file_io;
     void     *file   ;
+    u64_t     off    ;
 }   file;
 
 bool_t file_new        (file*, u32_t, va_list);

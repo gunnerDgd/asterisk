@@ -1,11 +1,10 @@
 #include <io.h>
 #include <net.h>
 #include <core.h>
-#include <run.h>
 
 #include <stdio.h>
 
-run_async()                                                                         {
+void run_async()                                                                    {
     io_sched *io_sched_1 = make (io_sched) from (0)                                 ;
     end      *end_1      = make (end)      from (2, make_v4_cstr("127.0.0.1"), 6500);
     tcp      *tcp_1      = make (tcp)      from (1, io_sched_1);

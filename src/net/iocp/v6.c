@@ -15,7 +15,7 @@ v6*
     make_v6
         (str* par)                                   {
             if (trait_of(par) != str_t) return null_t;
-            return v6_from_cstr(str_ptr(par));
+            return make_v6_cstr(str_ptr(par));
 }
 
 v6*

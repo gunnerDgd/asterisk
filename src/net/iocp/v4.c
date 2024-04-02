@@ -16,7 +16,7 @@ v4*
         (u32_t par)                            {
             v4 *ret        = make (v4) from (0);
             ret->v4.s_addr = be32(par);
-            return &ret;
+            return ret;
 }
 
 v4*
@@ -31,7 +31,7 @@ v4*
         (const char* par)                      {
             v4 *ret        = make (v4) from (0);
             ret->v4.s_addr = inet_addr(par);
-            return &ret;
+            return ret;
 }
 
 bool_t 

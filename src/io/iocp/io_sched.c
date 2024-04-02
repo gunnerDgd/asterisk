@@ -101,3 +101,11 @@ fut*
 				par
 			);
 }
+
+u64_t
+	io_sched_run
+		(io_sched* par)									   {
+			if (trait_of(par) != io_sched_t)	   return 0;
+			if (io_sched_do_poll(par) == fut_pend) return 0;
+			return io_sched_do_ret(par);
+}

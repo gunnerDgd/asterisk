@@ -17,9 +17,6 @@ typedef struct    tcp_acpt  {
 bool_t tcp_acpt_new  (tcp_acpt*, u32_t, va_list);
 bool_t tcp_acpt_clone(tcp_acpt*, tcp_acpt*)     ;
 void   tcp_acpt_del  (tcp_acpt*)				;
-
-bool_t tcp_acpt_conn (tcp_acpt*, end*)		    ;
-void   tcp_acpt_close(tcp_acpt*)				;
 fut*   tcp_acpt_run  (tcp_acpt*)				;
 
 #endif

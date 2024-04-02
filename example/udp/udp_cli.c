@@ -1,12 +1,11 @@
 #include <io.h>
 #include <net.h>
 #include <core.h>
-#include <run.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 
-run_async()                                                                      {
+void run_async()                                                                 {
     io_sched *sched_1 = make (io_sched) from (0)                                 ;
     udp      *udp_1   = make (udp)      from (1, sched_1)                        ;
     end      *end_1   = make (end)      from (2, make_v4_cstr("127.0.0.1"), 6500);

@@ -21,6 +21,7 @@ bool_t
             par_file->sched   = ref(sched)          ;
             par_file->file_io = INVALID_HANDLE_VALUE;
             par_file->file    = INVALID_HANDLE_VALUE;
+            par_file->off     = 0                   ;
             return true_t;
 }
 
@@ -140,14 +141,15 @@ fut*
             if (par->file == INVALID_HANDLE_VALUE)  return null_t;
 
             io_res *ret = make (io_res) from (1, par->sched);
-            if (trait_of(ret) != io_res_t) return 0;
-            ret->res.Offset     = -1;
-            ret->res.OffsetHigh = -1;
-            bool_t res = ReadFile   (
+            if (trait_of(ret) != io_res_t) return null_t;
+
+            ret->res.OffsetHigh = shl(par->off, 32)  ;
+            ret->res.Offset     = par->off & mask(32);
+            bool_t res = ReadFile                    (
                 par->file,
                 par_buf  ,
                 par_len  , 
-                0        ,
+                null_t   ,
                 &ret->res
             );
 
@@ -159,6 +161,7 @@ fut*
 				return fut ;
 			}
 
+            par->off += par_len;
             del   (ret);
 			return fut ;
 }
@@ -169,16 +172,17 @@ fut*
             if (trait_of(par)        != file_t)     return null_t;
             if (trait_of(par->sched) != io_sched_t) return null_t;
             if (par->file == INVALID_HANDLE_VALUE)  return null_t;
-
+            
             io_res *ret = make (io_res) from (1, par->sched);
             if (trait_of(ret) != io_res_t) return 0;
+
             ret->res.Offset     = -1;
             ret->res.OffsetHigh = -1;
             bool_t res = WriteFile  (
                 par->file,
                 par_buf  ,
                 par_len  , 
-                0        ,
+                null_t   ,
                 &ret->res
             );
 

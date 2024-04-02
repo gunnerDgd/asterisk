@@ -100,8 +100,10 @@ fut*
 				&ret->res
 			);
 
-			fut*   fut = io_res_fut(ret);
-			del   (fut);
+			fut* fut = io_res_fut(ret);
+			ret->ret = par;
+
+			del   (ret);
 			return fut;
 }
 

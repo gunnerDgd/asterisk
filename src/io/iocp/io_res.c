@@ -17,6 +17,7 @@ u64_t
     io_res_do_poll
         (io_res* par)                                    {
             if (trait_of(par) != io_res_t) return fut_err;
+            if (par->stat == fut_pend)     io_sched_run(par->sched);
             return par->stat;
 }
 
