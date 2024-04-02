@@ -9,7 +9,7 @@ void run_async()                                               {
     file     *file_1     = make (file)     from (1, io_sched_1);
     if (!file_create_cstr(file_1, "./test2.txt")) {
     if (!file_open_cstr  (file_1, "./test2.txt")) {
-        printf ("Failed to Create File (%d)\n");
+        printf ("Failed to Create File\n");
         return;
     }
     }

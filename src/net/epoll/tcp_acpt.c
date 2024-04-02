@@ -75,7 +75,7 @@ void
 }
 
 fut*
-	tcp_acpt_fut
+    tcp_acpt_run
 		(tcp_acpt* par)								            {
 			if (trait_of(par)       != tcp_acpt_t) return null_t;
 			if (trait_of(&par->tcp) != tcp_t)      return null_t;
