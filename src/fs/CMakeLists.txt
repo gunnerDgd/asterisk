@@ -2,12 +2,16 @@ if    (UNIX AND NOT APPLE)
     add_library(asterisk-fs STATIC
         epoll/file.h
         epoll/file.c
+
+        epoll/file_map.h
+        epoll/file_map.c
         file.h
     )
 
     add_library(asterisk-fs-include STATIC
         ../../include/fs.h
         ../../include/fs/file.h
+        ../../include/fs/file_map.h
     )
 
     set_target_properties(asterisk-fs-include PROPERTIES LINKER_LANGUAGE C)
