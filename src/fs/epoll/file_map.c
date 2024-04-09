@@ -30,11 +30,11 @@ void*
 
             if (par_size != par->len) par->len = par_size;
             par->map =  mmap                             (
-                par_acq                   ,
-                par->len                  ,
-                PROT_READ | PROT_WRITE    ,
-                MAP_SHARED | MAP_ANONYMOUS,
-                par->file->file           ,
+                par_acq               ,
+                par->len              ,
+                PROT_READ | PROT_WRITE,
+                MAP_SHARED            ,
+                par->file->file       ,
                 par->off
             );
 
