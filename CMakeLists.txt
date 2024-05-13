@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 project(asterisk-all)
 
-if    (NOT ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+if    (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     if    (UNIX AND NOT APPLE)
         if   (NOT EXISTS /usr/bin/git)
             message("[asterisk] Git Installation is required for the initialization.")
@@ -33,8 +33,21 @@ if    (NOT ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     preset_os      ()
 
     enable_collections()
+    enable_thread     ()
     enable_libc       ()
+else  ()
+    if   (NOT PRESET_FEATURE_COLLECTIONS)
+        message("[asterisk] asterisk requires \"collections\" feature of crisp.")
+        message(SEND_ERROR)
+    endif()
+
+    if   (NOT PRESET_FEATURE_THREAD)
+        message("[asterisk] asterisk requires \"collections\" feature of crisp.")
+        message(SEND_ERROR)
+    endif()
 endif ()
+
+
 
 include_directories(lib/crisp/include)
 add_subdirectory   (lib)

@@ -1,5 +1,8 @@
 if (UNIX AND NOT APPLE)
     add_library(asterisk-net STATIC
+        epoll/net.h
+        epoll/net.c
+
         epoll/end.h
         epoll/end.c
 
@@ -24,6 +27,8 @@ if (UNIX AND NOT APPLE)
         udp.h
         v4.h
         v6.h
+
+        ../net.h
     )
 
     add_library(asterisk-net-include STATIC
@@ -69,6 +74,8 @@ if (WIN32)
         udp.h
         v4.h
         v6.h
+
+        ../net.h
     )
 
     add_library(asterisk-net-include STATIC

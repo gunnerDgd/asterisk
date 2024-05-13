@@ -5,7 +5,12 @@ if    (UNIX AND NOT APPLE)
 
         epoll/file_map.h
         epoll/file_map.c
+
         file.h
+        file_map.h
+
+        ../fs.h
+        ../fs.c
     )
 
     add_library(asterisk-fs-include STATIC
@@ -27,6 +32,10 @@ if    (WIN32)
         iocp/file_map.c
 
         file.h
+        file_map.h
+
+        ../fs.h
+        ../fs.c
     )
 
     add_library(asterisk-fs-include STATIC
