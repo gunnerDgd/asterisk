@@ -3,6 +3,8 @@
 #include "v4.h"
 #include "v6.h"
 
+#include "../../io.h"
+
 obj_trait tcp_trait	= make_trait (
 	tcp_new	   ,
 	tcp_clone  ,
@@ -16,13 +18,14 @@ obj_trait* tcp_t = &tcp_trait;
 
 bool_t 
 	tcp_new
-		(tcp* par_tcp, u32_t par_count, va_list par)							  {
-			io_sched* sched = 0; if (par_count > 0) sched = va_arg(par, io_sched*);
+		(tcp* self, u32_t count, va_list arg)									   {
+			io_sched* sched = null_t; if (count > 0) sched = va_arg(arg, io_sched*);
+			if (trait_of(sched) != io_sched_t) sched = this_io_sched();
 			if (trait_of(sched) != io_sched_t) return false_t;
-			par_tcp->tcp_io = 0				;
-			par_tcp->tcp    = INVALID_SOCKET;
-			par_tcp->sched  = ref(sched)    ;
-			par_tcp->flag   = 0		        ;
+			self->tcp_io = 0			 ;
+			self->tcp    = INVALID_SOCKET;
+			self->sched  = ref(sched)    ;
+			self->flag   = 0		     ;
 			return true_t;
 }
 

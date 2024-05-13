@@ -4,10 +4,14 @@
 
 #include <stdio.h>
 
-void run_async()                                                         {
-    io_sched *io_sched_1 = make (io_sched) from (0)                      ;
-    end      *end_1      = make (end)      from (2, make_v4_int(0), 6500);
-    tcp_acpt *acpt_1     = make (tcp_acpt) from (2, io_sched_1, end_1)   ;
+use         (
+    dep(net), 
+    dep(io)
+)
+
+run_async()                                                          {
+    end      *end_1  = make (end)      from (2, make_v4_int(0), 6500);
+    tcp_acpt *acpt_1 = make (tcp_acpt) from (1, end_1);
 
     while(true_t)                            {
         tcp *cli = await(tcp_acpt_run(acpt_1));

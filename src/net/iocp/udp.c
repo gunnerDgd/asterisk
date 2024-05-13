@@ -16,8 +16,9 @@ obj_trait *udp_t = &udp_trait;
 
 bool_t 
     udp_new
-        (udp* par_udp, u32_t par_count, va_list par)                              {
-            io_sched* sched = 0; if (par_count > 0) sched = va_arg(par, io_sched*);
+        (udp* par_udp, u32_t par_count, va_list par)                                   {
+            io_sched* sched = null_t; if (par_count > 0) sched = va_arg(par, io_sched*);
+            if (trait_of(sched) != io_sched_t) sched = this_io_sched();
             if (trait_of(sched) != io_sched_t) return false_t;
             par_udp->sched  = ref(sched)    ;
             par_udp->udp_io = 0             ;

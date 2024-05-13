@@ -13,15 +13,16 @@ obj_trait* file_t = &file_trait;
 
 bool_t
     file_new
-        (file* par_file, u32_t par_count, va_list par)                            {
-            io_sched *sched = 0; if (par_count > 0) sched = va_arg(par, io_sched*);
-            if (trait_of(sched) != io_sched_t)      return false_t;
-            if (sched->hnd == INVALID_HANDLE_VALUE) return false_t;
+        (file* self, u32_t count, va_list arg)                                     {
+            io_sched *sched = null_t; if (count > 0) sched = va_arg(arg, io_sched*);
+            if (trait_of(sched) != io_sched_t)       sched = this_io_sched();
+            if (trait_of(sched) != io_sched_t)       return false_t;
+            if (sched->hnd == INVALID_HANDLE_VALUE)  return false_t;
             
-            par_file->sched   = ref(sched)          ;
-            par_file->file_io = INVALID_HANDLE_VALUE;
-            par_file->file    = INVALID_HANDLE_VALUE;
-            par_file->off     = 0                   ;
+            self->sched   = ref(sched)          ;
+            self->file_io = INVALID_HANDLE_VALUE;
+            self->file    = INVALID_HANDLE_VALUE;
+            self->off     = 0                   ;
             return true_t;
 }
 

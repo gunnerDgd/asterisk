@@ -14,8 +14,9 @@ obj_trait* tcp_acpt_t = &tcp_acpt_trait;
 bool_t 
 	tcp_acpt_new
 		(tcp_acpt* par_acpt, u32_t par_count, va_list par)							   {
-			io_sched *sched = null_t; if (par_count > 0) sched = va_arg(par, io_sched*);
-			end		 *end   = null_t; if (par_count > 1) end   = va_arg(par, void*)	   ;
+			io_sched *sched = null_t; if (par_count > 1) sched = va_arg(par, io_sched*);
+			end		 *end   = null_t; if (par_count > 0) end   = va_arg(par, void*)	   ;
+			if (trait_of(sched) != io_sched_t) sched = this_io_sched();
 			if (trait_of(sched) != io_sched_t) return false_t;
 			if (trait_of(end)   != end_t)      return false_t;
 

@@ -62,7 +62,6 @@ bool_t
 
 			if (ret) return false_t;
 			return true_t;
-
 }
 
 bool_t net_clone(struct net* par, struct net* par_clone) { return false_t; }
