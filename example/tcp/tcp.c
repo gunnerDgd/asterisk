@@ -17,7 +17,7 @@ run_async()                                                          {
         tcp *cli = await(tcp_acpt_run(acpt_1));
         if (!cli)                                  {
             printf("Failed to Accept Connection\n");
-            return;
+            return 0;
         }
 
         printf("Accepted\n");

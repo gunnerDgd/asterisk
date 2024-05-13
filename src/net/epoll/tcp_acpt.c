@@ -19,7 +19,7 @@ obj_trait* tcp_acpt_t = &tcp_acpt_trait;
 
 u64_t
     tcp_acpt_do_poll
-        (io_res* par)                                                                  {
+        (io_res* par)                                                                   {
             if (trait_of(par)  != io_res_t)    return fut_err; tcp_acpt *acpt = par->dev;
             if (trait_of(acpt) != tcp_acpt_t)  return fut_err; tcp      *tcp  = par->arg;
             if (trait_of(tcp)  != tcp_t)       return fut_err;

@@ -22,15 +22,15 @@ obj_trait* tcp_t = &tcp_trait;
 
 u64_t
     tcp_conn_do_poll
-        (io_res* self)                                                                  {
-            if (trait_of(self) != io_res_t) return fut_err; tcp* poll = (tcp*) self->dev;
-            if (trait_of(poll) != tcp_t)    return fut_err;
-            if (io_poll_hang(&poll->poll))  return fut_err;
-            if (io_poll_err (&poll->poll))  return fut_err;
+        (io_res* self)                                                          {
+            if (trait_of(self) != io_res_t) return fut_err; tcp* tcp = self->dev;
+            if (trait_of(tcp)  != tcp_t)    return fut_err;
+            if (io_poll_hang(&tcp->poll))  return fut_err;
+            if (io_poll_err (&tcp->poll))  return fut_err;
 
-            if (!io_poll_out(&poll->poll)) io_sched_run(poll->sched);
-            if (!io_poll_out(&poll->poll)) return fut_pend;
-            io_poll_mask_out(&poll->poll, false_t);
+            if (!io_poll_out(&tcp->poll)) io_sched_run(tcp->sched);
+            if (!io_poll_out(&tcp->poll)) return fut_pend;
+            io_poll_mask_out(&tcp->poll, false_t);
             return fut_ready;
 }
 
