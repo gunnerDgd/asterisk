@@ -23,10 +23,10 @@ void
 
 void*
     file_map_do_acq
-        (struct file_map* par, void* par_acq, u64_t par_size)   {
-            if (trait_of(par)       != file_map_t) return null_t;
-            if (trait_of(par->file) != file_t)     return null_t;
-            if (par->map)                          return par->map;
+        (struct file_map* par, void* par_acq, u64_t par_size)    {
+            if (trait_of(par)      != file_map_t) return   null_t;
+            if (trait_of(par->dev) != file_t)     return   null_t;
+            if (par->map)                         return par->map;
 
             if (par_size != par->len) par->len = par_size;
             par->map =  mmap                             (
@@ -34,7 +34,7 @@ void*
                 par->len              ,
                 PROT_READ | PROT_WRITE,
                 MAP_SHARED            ,
-                par->file->file       ,
+                par->dev->file        ,
                 par->off
             );
 
@@ -44,9 +44,9 @@ void*
 void
     file_map_do_rel
         (struct file_map* par, void* par_rel, u64_t par_size) {
-            if (trait_of(par)       != file_map_t) return;
-            if (trait_of(par->file) != file_t)     return;
-            if (par_rel != par->map)               return;
+            if (trait_of(par)      != file_map_t) return;
+            if (trait_of(par->dev) != file_t)     return;
+            if (par_rel != par->map)              return;
             munmap(par_rel, par_size);
 }
 
@@ -71,15 +71,15 @@ obj_trait *file_map_t = &file_map_trait;
 
 bool_t
     file_map_new
-        (struct file_map* par_map, u32_t par_count, va_list par)             {
-            file* file = null_t; if (par_count > 0) file = va_arg(par, void*);
-            u64_t off  = 0ull  ; if (par_count > 1) off  = va_arg(par, u64_t);
-            if (trait_of(file) != file_t) return false_t;
-            par_map->file = ref (file);
-            par_map->off  = off;
+        (struct file_map* self, u32_t count, va_list arg)              {
+            file* dev = null_t; if (count > 0) dev = va_arg(arg, void*);
+            u64_t off = 0ull  ; if (count > 1) off = va_arg(arg, u64_t);
+            if (trait_of(self) != file_t) return false_t;
+            self->dev = (file*) ref (self);
+            self->off  = off;
             return true_t;
 }
 
-bool_t file_map_clone(struct file_map* par, struct file_map* par_clone) { return false_t; }
-bool_t file_map_ref  (struct file_map* par)                             { return false_t; }
-void   file_map_del  (struct file_map* par)                             { del(par->file); }
+bool_t file_map_clone(struct file_map* self, struct file_map* clone) { return false_t; }
+bool_t file_map_ref  (struct file_map* self)                         { return false_t; }
+void   file_map_del  (struct file_map* self)                         { del(self->map); }

@@ -24,9 +24,9 @@ bool_t
             event->data.ptr = par_dev           ;
 
             if (epoll_ctl(sched->hnd, EPOLL_CTL_ADD, dev, event)) return false_t;
-            par_dev->poll.events = 0         ;
-            par_dev->sched       = ref(sched);
-            par_dev->dev         = dev       ;
+            par_dev->poll.events = 0ull                  ;
+            par_dev->sched       = (io_sched*) ref(sched);
+            par_dev->dev         = dev                   ;
             return true_t;
 }
 

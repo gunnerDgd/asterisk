@@ -8,7 +8,7 @@ struct file;
 extern obj_trait *file_map_t;
 struct            file_map  {
     obj          head;
-    struct file *file;
+    struct file *dev;
     u64_t        off;
     u64_t        len;
     void*        map;

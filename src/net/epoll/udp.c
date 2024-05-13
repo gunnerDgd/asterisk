@@ -21,22 +21,22 @@ obj_trait *udp_t = &udp_trait;
 
 u64_t
     udp_recv_do_poll
-        (io_res* par)                                                         {
-            if (trait_of(par) != io_res_t) return fut_err; udp* udp = par->dev;
-            if (trait_of(udp) != udp_t)    return fut_err;
-            if (io_poll_hang(&udp->poll))  return fut_err;
-            if (io_poll_err (&udp->poll))  return fut_err;
+        (io_res* self)                                                                  {
+            if (trait_of(self) != io_res_t) return fut_err; udp* poll = (udp*) self->dev;
+            if (trait_of(poll) != udp_t)    return fut_err;
+            if (io_poll_hang(&poll->poll))  return fut_err;
+            if (io_poll_err (&poll->poll))  return fut_err;
 
-            if (!io_poll_in (&udp->poll)) io_sched_run(udp->sched);
-            if (!io_poll_in (&udp->poll)) return fut_pend;
-            i64_t ret = recv                             (
-                udp->udp,
-                par->buf,
-                par->len,
-                udp->flag
+            if (!io_poll_in (&poll->poll)) io_sched_run(poll->sched);
+            if (!io_poll_in (&poll->poll)) return fut_pend;
+            i64_t ret = recv                              (
+                poll->udp,
+                self->buf,
+                self->len,
+                poll->flag
             );
 
-            if (ret == -1) return fut_err ; par->ret += ret;
+            if (ret == -1) return fut_err ; self->ret += ret;
             if (ret ==  0) return fut_pend;
             return fut_ready;
 }
@@ -76,28 +76,28 @@ i64_t
 
 u64_t
     udp_recv_from_do_ret
-        (io_res* par)                                                         {
-            if (trait_of(par) != io_res_t) return fut_err; udp* udp = par->dev;
-            if (trait_of(udp) != udp_t)    return fut_err;
-            return par->ret;
+        (io_res* self)                                                                 {
+            if (trait_of(self) != io_res_t) return fut_err; udp* ret = (udp)* self->dev;
+            if (trait_of(ret)  != udp_t)    return fut_err;
+            return self->ret;
 }
 
 u64_t
     udp_send_do_poll
-        (io_res* par)                                                         {
-            if (trait_of(par) != io_res_t) return fut_err; udp *udp = par->dev;
-            if (trait_of(udp) != udp_t)    return fut_err;
-            if (io_poll_hang(&udp->poll))  return fut_err;
-            if (io_poll_err (&udp->poll))  return fut_err;
-            par->ret = send                              (
-                udp->udp,
-                par->buf,
-                par->len,
-                udp->flag
+        (io_res* self)                                                                  {
+            if (trait_of(self) != io_res_t) return fut_err; udp *poll = (udp*) self->dev;
+            if (trait_of(poll) != udp_t)    return fut_err;
+            if (io_poll_hang(&poll->poll))  return fut_err;
+            if (io_poll_err (&poll->poll))  return fut_err;
+            self->ret = send                              (
+                poll->udp,
+                self->buf,
+                self->len,
+                poll->flag
             );
 
-            if (par->ret == -1) return fut_err  ;
-            if (par->ret)       return fut_ready;
+            if (self->ret == -1) return fut_err  ;
+            if (self->ret)       return fut_ready;
             return fut_pend;
 }
 
@@ -111,30 +111,30 @@ u64_t
 
 i64_t
     udp_send_to_do_poll
-        (io_res* par)                                                         {
-            if (trait_of(par) != io_res_t) return fut_err; udp *udp = par->dev;
-            if (trait_of(udp) != udp_t)    return fut_err; end *end = par->arg;
-            if (trait_of(end) != end_t)    return fut_err;
-            par->ret = sendto                            (
-                udp->udp ,
-                par->buf ,
-                par->len ,
-                udp->flag,
-                &end->all,
+        (io_res* self)                                                                  {
+            if (trait_of(self) != io_res_t) return fut_err; udp *poll = (udp*) self->dev;
+            if (trait_of(poll) != udp_t)    return fut_err; end *end  =        self->arg;
+            if (trait_of(end)  != end_t)    return fut_err;
+            self->ret = sendto                            (
+                poll->udp ,
+                self->buf ,
+                self->len ,
+                poll->flag,
+                &end->all ,
                 end->len
             );
 
-            if (par->ret == -1) return fut_err  ;
-            if (par->ret)       return fut_ready;
+            if (self->ret == -1) return fut_err  ;
+            if (self->ret)       return fut_ready;
             return fut_pend;
 }
 
 u64_t
     udp_send_to_do_ret
-        (io_res* par)                                                         {
-            if (trait_of(par) != io_res_t) return fut_err; udp* udp = par->dev;
-            if (trait_of(udp) != udp_t)    return fut_err;
-            return par->ret;
+        (io_res* self)                                                                 {
+            if (trait_of(self) != io_res_t) return fut_err; udp* ret = (udp*) self->dev;
+            if (trait_of(ret)  != udp_t)    return fut_err;
+            return self->ret;
 }
 
 fut_ops udp_recv_from_do = make_fut_ops (udp_recv_from_do_poll, udp_recv_from_do_ret);
