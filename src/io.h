@@ -5,6 +5,8 @@
 #include "io/io_sched.h"
 #include "io/io_poll.h"
 
+#include <thread.h>
+
 
 extern obj_trait *io_t;
 struct            io  {
@@ -19,14 +21,6 @@ void   io_del  (struct io*)                ;
 
 io_sched* this_io_sched();
 
-#ifdef PRESET_FEATURE_THREAD
-#ifdef PRESET_COMPILER_GCC
-extern __thread           struct io io;
-#elif  PRESET_COMPILER_MSVC
-extern __declspec(thread) struct io io;
-#endif
-#else
-struct io io;
-#endif
+extern thd_local struct io io;
 
 #endif
