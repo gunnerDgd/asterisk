@@ -18,14 +18,14 @@ extern struct io io;
 
 io_sched* this_io_sched();
 
-#define run_async()                                            \
-    int run_async_do();                                        \
-    int run         ()                                        {\
-        io_sched *sched  = this_io_sched();                    \
-        fut      *run_io = io_sched_fut (sched);               \
-        fut      *run    = async        (run_async_do, null_t);\
-        for ( ; fut_poll(run) == fut_pend ; fut_poll(run_io)); \
-    }                                                          \
-    int run_async_do()                                         \
+#define run_async()                                                               \
+    int run_async_do();                                                           \
+    int run         ()                                                           {\
+        io_sched *sched  = this_io_sched();                                       \
+        fut      *run_io = io_sched_fut (sched);                                  \
+        fut      *run    = async        ((void*(*)(void*))run_async_do, null_t);\
+        for ( ; fut_poll(run) == fut_pend ; fut_poll(run_io));                    \
+    }                                                                             \
+    int run_async_do()                                                            \
 
 #endif
