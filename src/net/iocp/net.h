@@ -19,13 +19,7 @@ struct            net  {
     SOCKET  ws2     ;
 };
 
-#ifdef PRESET_COMPILER_MSVC
-extern __declspec(thread) struct net;
-#endif
-
-#ifdef PRESET_COMPILER_GCC
-extern __thread           struct net;
-#endif
+extern struct net net;
 
 bool_t net_new  (struct net*, u32_t, va_list);
 bool_t net_clone(struct net*, struct net*)   ;
