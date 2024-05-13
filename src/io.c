@@ -11,6 +11,8 @@ obj_trait io_trait = make_trait (
 
 obj_trait *io_t = &io_trait;
 
+__declspec(thread) struct io io;
+
 bool_t io_new  (struct io* self, u32_t count, va_list arg) { return make_at (&self->sched, io_sched) from (0); }
 bool_t io_clone(struct io* self, struct io* clone)         { return    false_t; }
 bool_t io_ref  (struct io* self)                           { return    false_t; }
