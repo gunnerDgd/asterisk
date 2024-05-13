@@ -12,6 +12,9 @@ if    (UNIX AND NOT APPLE)
         io_sched.h
         io_poll.h
         io_res.h
+
+        io.h
+        io.c
     )
 
     add_library (asterisk-io-include STATIC
@@ -34,6 +37,9 @@ if   (WIN32)
         io_sched.h
         io_poll.h
         io_res.h
+
+        io.h
+        io.c
     )
 
     add_library (asterisk-io-include STATIC
