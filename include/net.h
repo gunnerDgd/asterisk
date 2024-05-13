@@ -9,4 +9,9 @@
 #include "net/v6.h"
 #include "net/end.h"
 
+#ifdef PRESET_WIN32
+extern obj_trait *net_t;
+extern struct     net { u8_t net[512]; } net;
+#endif
+
 #endif

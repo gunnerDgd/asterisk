@@ -16,6 +16,8 @@ obj_trait net_trait = make_trait (
 
 obj_trait *net_t = &net_trait;
 
+__declspec(thread) struct net net;
+
 bool_t
     net_new
 		(struct net* par_net, u32_t par_count, va_list par)					  {
