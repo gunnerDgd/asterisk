@@ -3,6 +3,7 @@
 
 #include <core.h>
 #include <collections.h>
+#include <thread.h>
 
 #include "../../io.h"
 
@@ -12,6 +13,9 @@ typedef struct    file    {
     obj              head ;
     struct io_sched *sched;
     int              file ;
+    thd             *thd;
+    u64_t            out,
+                     in ;
 }   file;
 
 bool_t file_new        (file*, u32_t, va_list);
