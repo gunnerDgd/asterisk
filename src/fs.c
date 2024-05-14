@@ -24,5 +24,5 @@ bool_t
 }
 
 bool_t fs_clone(struct fs* self, struct fs* clone) { return false_t; }
-bool_t fs_ref  (struct fs* self)                   { return false_t; }
-void   fs_del  (struct fs* self)                   { return; }
+bool_t fs_ref  (struct fs* self)                   { return true_t ; }
+void   fs_del  (struct fs* self)                   {                 }
