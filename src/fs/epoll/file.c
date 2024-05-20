@@ -1,5 +1,6 @@
 #include "file.h"
 
+#include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -25,15 +26,18 @@ u64_t
             u8_t *buf = self->buf + self->ret;
             u64_t len = self->len - self->ret;
             int   fd  = file->file;
-            self->ret = pread     (
+            i64_t ret = pread     (
                 fd     ,
                 buf    ,
                 len    ,
                 file->in
             );
 
-            if (self->ret < 0) return fut_err;
-            file->in += self->ret;
+            if (ret <= 0) return fut_err;
+            self->ret += ret;
+            file->in  += ret;
+
+            if (self->ret < self->len) return fut_pend;
             return fut_ready;
 }
 
@@ -55,15 +59,18 @@ u64_t
             u8_t *buf = self->buf + self->ret;
             u64_t len = self->len - self->ret;
             int   fd  = file->file;
-            self->ret = pwrite    (
+            i64_t ret = pwrite    (
                 fd      ,
                 buf     ,
                 len     ,
                 file->out
             );
 
-            if (self->ret < 0) return fut_err;
-            file->out += self->ret;
+            if (ret <= 0) return fut_err;
+            self->ret += ret;
+            file->out += ret;
+
+            if (self->ret < self->len) return fut_pend;
             return fut_ready;
 }
 
@@ -186,4 +193,23 @@ fut*
             fut_poll(ret);
             del     (res);
             return   ret ;
+}
+
+u64_t
+    file_size
+        (file* self)                                    {
+            if (trait_of(self) != file_t) return false_t;
+            struct stat ret;
+
+            if (fstat(self->file, &ret)) return 0;
+            return ret.st_size;
+}
+
+u64_t
+    file_pos
+        (file* self, u64_t pos)                    {
+            if (trait_of(self) != file_t) return -1;
+            self->out = pos;
+            self->in  = pos;
+            return      pos;
 }

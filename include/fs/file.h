@@ -15,5 +15,7 @@ void   file_close      (file*)              ;
 
 fut*   file_read       (file*, u8_t*, u64_t);
 fut*   file_write      (file*, u8_t*, u64_t);
+u64_t  file_size       (file*)              ;
+u64_t  file_pos        (file*, u64_t)       ;
 
 #endif
