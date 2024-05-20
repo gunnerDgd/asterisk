@@ -17,8 +17,10 @@ bool_t
         (io_poll* par_dev, u32_t par_count, va_list par)                       {
             io_sched* sched = 0; if (par_count > 0) sched = va_arg(par, void*);
             int       dev   = 0; if (par_count > 1) dev   = va_arg(par, int)  ;
+
             if (trait_of(sched) != io_sched_t) return false_t;
             if (dev <= 0)                      return false_t;
+
             struct epoll_event* event = &par_dev->mask;
             event->events   = EPOLLIN | EPOLLERR;
             event->data.ptr = par_dev           ;
