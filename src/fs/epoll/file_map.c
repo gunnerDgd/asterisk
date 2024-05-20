@@ -23,31 +23,33 @@ void
 
 void*
     file_map_do_acq
-        (struct file_map* par, void* par_acq, u64_t par_size)    {
-            if (trait_of(par)      != file_map_t) return   null_t;
-            if (trait_of(par->dev) != file_t)     return   null_t;
-            if (par->map)                         return par->map;
+        (struct file_map* self, void* hint, u64_t len)        {
+            if (trait_of(self) != file_map_t) return    null_t;
+            if (self->map)                    return self->map;
+            u64_t off = self->off;
+            u64_t dev = -1;
 
-            if (par_size != par->len) par->len = par_size;
-            par->map =  mmap                             (
-                par_acq               ,
-                par->len              ,
-                PROT_READ | PROT_WRITE,
-                MAP_SHARED            ,
-                par->dev->file        ,
-                par->off
+            if (trait_of(self->dev) == file_t) dev = self->dev->file;
+            self->map =  mmap                                       (
+                hint                      ,
+                len                       ,
+                PROT_READ     | PROT_WRITE,
+                MAP_ANONYMOUS |MAP_SHARED ,
+                dev                       ,
+                off
             );
 
-            return par->map;
+            self->len  = len;
+            return self->map;
 }
 
 void
     file_map_do_rel
-        (struct file_map* par, void* par_rel, u64_t par_size) {
-            if (trait_of(par)      != file_map_t) return;
-            if (trait_of(par->dev) != file_t)     return;
-            if (par_rel != par->map)              return;
-            munmap(par_rel, par_size);
+        (struct file_map* self, void* rel, u64_t len) {
+            if (trait_of(self) != file_map_t) return;
+            if (self->map != rel)             return;
+            if (self->len != len)             return;
+            munmap(rel, len);
 }
 
 mem_ops file_map_do = make_mem_ops (
@@ -74,9 +76,11 @@ bool_t
         (struct file_map* self, u32_t count, va_list arg)              {
             file* dev = null_t; if (count > 0) dev = va_arg(arg, void*);
             u64_t off = 0ull  ; if (count > 1) off = va_arg(arg, u64_t);
-            if (trait_of(self) != file_t) return false_t;
-            self->dev = (file*) ref (self);
+
+            if (trait_of(dev) != file_t) dev = null_t;
+            self->dev = (file*) ref (dev);
             self->off  = off;
+
             return true_t;
 }
 
