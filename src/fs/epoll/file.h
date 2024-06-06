@@ -5,17 +5,16 @@
 #include <collections.h>
 #include <thread.h>
 
-#include "../../io.h"
+#include "out.h"
+#include "in.h"
 
 struct io_sched;
-extern obj_trait* file_t  ;
-typedef struct    file    {
-    obj              head ;
-    struct io_sched *sched;
-    int              file ;
-    thd             *thd;
-    u64_t            out,
-                     in ;
+extern obj_trait* file_t;
+typedef struct    file  {
+    obj head;
+    int file;
+    out out;
+    in  in;
 }   file;
 
 bool_t file_new        (file*, u32_t, va_list);
@@ -28,9 +27,10 @@ bool_t file_create     (file*, str*)          ;
 bool_t file_create_cstr(file*, const char*)   ;
 void   file_close      (file*)                ;
 
+u64_t  file_seek       (file*, obj_trait*, u64_t);
+u64_t  file_pos        (file*, obj_trait*)       ;
 fut*   file_read       (file*, u8_t*, u64_t)  ;
 fut*   file_write      (file*, u8_t*, u64_t)  ;
 u64_t  file_size       (file*)                ;
-u64_t  file_pos        (file*, u64_t)         ;
 
 #endif
