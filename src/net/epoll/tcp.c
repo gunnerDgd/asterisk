@@ -107,17 +107,17 @@ fut_ops tcp_recv_do = make_fut_ops (tcp_recv_do_poll, tcp_recv_do_ret);
 
 bool_t 
 	tcp_new
-		(tcp* par_tcp, u32_t par_count, va_list par)		     	                    {
-			io_sched  *sched = null_t; if (par_count > 0) sched = va_arg(par, io_sched*);
-			obj_trait *af    = null_t; if (par_count > 1) af    = va_arg(par, void*)    ;
+		(tcp* self, u32_t count, va_list arg)		     	                        {
+			io_sched  *sched = null_t; if (count > 0) sched = va_arg(arg, io_sched*);
+			obj_trait *af    = null_t; if (count > 1) af    = va_arg(arg, void*)    ;
 			if (trait_of(sched) != io_sched_t) return false_t;
 			if (!af)                                         {
-                par_tcp->sched = ref (sched);
+                self->sched = ref (sched);
                 return true_t;
 			}
 
-            par_tcp->sched = ref (sched);
-			if (!tcp_open(par_tcp, af)) {
+            self->sched = ref (sched);
+			if (!tcp_open(self, af)) {
 			    del    (sched);
                 return false_t;
             }
@@ -127,68 +127,69 @@ bool_t
 
 bool_t 
 	tcp_clone
-		(tcp* par, tcp* par_clone) {
+		(tcp* self, tcp* clone) {
 			return false_t;
 }
 
 void
 	tcp_del
-		(tcp* par)         {
-            tcp_close(par) ;
-			del(par->sched);
+		(tcp* self)         {
+            tcp_close(self) ;
+			del(self->sched);
 }
 
 bool_t
     tcp_open
-        (tcp* par, obj_trait* par_af)                              {
-            if (trait_of(par) != tcp_t) return false_t; int af = -1;
-            if (par_af == v6_t) af = AF_INET6;
-            if (par_af == v4_t) af = AF_INET ;
-            if (af == -1) return false_t;
-            if (par->tcp) return true_t ;
+        (tcp* self, obj_trait* af)                                   {
+            if (trait_of(self) != tcp_t) return false_t; int res = -1;
+            if (af == v6_t) res = AF_INET6;
+            if (af == v4_t) res = AF_INET ;
+            if (res == -1)  return false_t;
+            if (self->tcp)  return true_t ;
 
-            par->tcp = socket(af, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);
-            if (par->tcp <= 0)                                                goto open_err;
-            if (!make_at(&par->poll, io_poll) from (2, par->sched, par->tcp)) goto open_err;
+            self->tcp = socket(res, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);
+            if (self->tcp <= 0)                                                  goto open_err;
+            if (!make_at(&self->poll, io_poll) from (2, self->sched, self->tcp)) goto open_err;
             return true_t;
     open_err:
-            close(par->tcp);
-            par->tcp   = 0;
+            close(self->tcp);
+            self->tcp    = 0;
             return false_t;
 
 }
 
 fut*
 	tcp_conn
-		(tcp* par, end* par_end)				              {
-			if (trait_of(par_end) != end_t)      return null_t;
-			if (trait_of(par)     != tcp_t)      return null_t;
-			if (!tcp_open(par, end_af(par_end))) return null_t;
+		(tcp* self, end* end)				               {
+            if (trait_of(self) != tcp_t)      return null_t;
+			if (trait_of(end)  != end_t)      return null_t;
+			if (!tcp_open(self, end_af(end))) return null_t;
+			io_res *res = null_t;
+			fut    *ret = null_t;
 
-            io_res *res = make (io_res) from (3, par, null_t, 0)   ;
-            fut    *ret = make (fut)    from (2, &tcp_conn_do, res);
-            if (trait_of(res) != io_res_t) return null_t;
-            if (trait_of(ret) != fut_t)    return null_t;
+            res = make (io_res) from (3, self, null_t, 0)  ;
+            ret = make (fut)    from (2, &tcp_conn_do, res);
+            if (trait_of(res) != io_res_t) goto err;
+            if (trait_of(ret) != fut_t)    goto err;
 
-            connect (par->tcp, &par_end->all, par_end->len);
-            if (errno != EINPROGRESS)                      {
-                del     (res);
-                del     (ret);
-                return null_t;
-            }
+            connect (self->tcp, &end->all, end->len);
+            if (errno != EINPROGRESS) goto err;
 
-            io_poll_mask_out(&par->poll, true_t);
+            io_poll_mask_out(&self->poll, true_t);
             del   (res);
             return ret ;
+    err:    del      (res);
+            del      (ret);
+            return false_t;
 }
 
 void 
 	tcp_close
-		(tcp* par)                              {
-		    if   (trait_of(par) != tcp_t) return;
-            close(par->tcp)  ;
-            del  (&par->poll);
-            par->tcp = 0;
+		(tcp* self)                              {
+		    if   (trait_of(self) != tcp_t) return;
+            close(self->tcp)  ;
+            del  (&self->poll);
+            self->tcp = 0;
 }
 
 fut*

@@ -14,18 +14,18 @@ obj_trait *io_res_t = &io_res_trait;
 
 bool_t
     io_res_new
-        (io_res* par_res, u32_t par_count, va_list par)                    {
-            obj  *dev = null_t; if (par_count > 0) dev = va_arg(par, obj*) ;
-            void *buf = null_t; if (par_count > 1) buf = va_arg(par, void*);
-            u64_t len = 0;      if (par_count > 2) len = va_arg(par, u64_t);
-            any_t arg = 0;      if (par_count > 3) arg = va_arg(par, any_t);
+        (io_res* self, u32_t count, va_list par)                       {
+            obj  *dev = null_t; if (count > 0) dev = va_arg(par, obj*) ;
+            void *buf = null_t; if (count > 1) buf = va_arg(par, void*);
+            u64_t len = 0;      if (count > 2) len = va_arg(par, u64_t);
+            any_t arg = 0;      if (count > 3) arg = va_arg(par, any_t);
             if (!dev) return false_t;
 
-            par_res->stat = fut_pend;
-            par_res->dev  = ref(dev);
-            par_res->buf  = buf     ;
-            par_res->len  = len     ;
-            par_res->arg  = arg     ;
+            self->stat = fut_pend;
+            self->dev  = ref(dev);
+            self->buf  = buf     ;
+            self->len  = len     ;
+            self->arg  = arg     ;
             return true_t;
 }
 
