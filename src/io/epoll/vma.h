@@ -1,5 +1,5 @@
-#ifndef __EPOLL_IO_POLL_H__
-#define __EPOLL_IO_POLL_H__
+#ifndef __EPOLL_VMA_H__
+#define __EPOLL_VMA_H__
 
 #include <core.h>
 
