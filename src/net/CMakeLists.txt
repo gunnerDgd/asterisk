@@ -9,8 +9,11 @@ if (UNIX AND NOT APPLE)
         epoll/tcp.h
         epoll/tcp.c
 
-        epoll/tcp_acpt.h
-        epoll/tcp_acpt.c
+        epoll/acpt.h
+        epoll/acpt.c
+
+        epoll/acpt/tcp.h
+        epoll/acpt/tcp.c
 
         epoll/udp.h
         epoll/udp.c
@@ -22,7 +25,7 @@ if (UNIX AND NOT APPLE)
         epoll/v6.c
 
         end.h
-        tcp_acpt.h
+            acpt.h
         tcp.h
         udp.h
         v4.h
@@ -69,7 +72,7 @@ if (WIN32)
         iocp/v6.c
 
         end.h
-        tcp_acpt.h
+            acpt.h
         tcp.h
         udp.h
         v4.h

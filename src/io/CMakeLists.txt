@@ -9,9 +9,13 @@ if    (UNIX AND NOT APPLE)
         epoll/io_sched.h
         epoll/io_sched.c
 
+        epoll/vma.h
+        epoll/vma.c
+
         io_sched.h
         io_poll.h
         io_res.h
+        vma.h
 
         ../io.h
         ../io.c
@@ -40,6 +44,8 @@ if   (WIN32)
 
         ../io.h
         ../io.c
+            epoll/vma.h
+            epoll/vma.c
     )
 
     add_library (asterisk-io-include STATIC

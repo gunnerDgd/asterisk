@@ -3,11 +3,15 @@ if    (UNIX AND NOT APPLE)
         epoll/file.h
         epoll/file.c
 
-        epoll/file_map.h
-        epoll/file_map.c
+        epoll/out.h
+        epoll/out.c
+
+        epoll/in.h
+        epoll/in.c
 
         file.h
-        file_map.h
+        out.h
+        in.h
 
         ../fs.h
         ../fs.c
@@ -32,9 +36,8 @@ if    (WIN32)
         iocp/file_map.c
 
         file.h
-        file_map.h
 
-        ../fs.h
+            ../fs.h
         ../fs.c
     )
 
