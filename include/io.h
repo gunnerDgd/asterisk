@@ -2,6 +2,7 @@
 #define __IO_H__
 
 #include "io/io_sched.h"
+#include "io/vma.h"
 
 extern obj_trait *io_t;
 struct            io { u8_t io[2 KB]; };
