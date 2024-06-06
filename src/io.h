@@ -4,6 +4,7 @@
 #include "io/io_res.h"
 #include "io/io_sched.h"
 #include "io/io_poll.h"
+#include "io/vma.h"
 
 #include <thread.h>
 
