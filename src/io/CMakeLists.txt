@@ -24,6 +24,7 @@ if    (UNIX AND NOT APPLE)
     add_library (asterisk-io-include STATIC
         ../../include/io.h
         ../../include/io/io_sched.h
+        ../../include/io/vma.h
     )
 
     set_target_properties(asterisk-io-include PROPERTIES LINKER_LANGUAGE C)
