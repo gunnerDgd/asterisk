@@ -119,6 +119,14 @@ u64_t
             return -1;
 }
 
+bool_t
+    file_resize
+        (file* self, u64_t len)                           {
+            if (trait_of (self) != file_t)  return false_t;
+            if (ftruncate(self->file, len)) return false_t;
+            return true_t;
+}
+
 fut*
     file_read
         (file* self, u8_t* buf, u64_t len)             {
