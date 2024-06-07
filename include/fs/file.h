@@ -15,6 +15,8 @@ void   file_close      (file*)              ;
 
 u64_t  file_seek       (file*, obj_trait*, u64_t);
 u64_t  file_pos        (file*, obj_trait*)       ;
+bool_t file_resize     (file*, u64_t)            ;
+
 fut*   file_read       (file*, u8_t*, u64_t)  ;
 fut*   file_write      (file*, u8_t*, u64_t)  ;
 u64_t  file_size       (file*)                ;
