@@ -26,6 +26,7 @@ bool_t
 
             if (!make_at(&self->out, out) from (1, sched)) goto err;
             if (!make_at(&self->in , in)  from (1, sched)) goto err;
+            self->file = -1;
             return true_t;
     err:    del (&self->out);
             del (&self->in) ;

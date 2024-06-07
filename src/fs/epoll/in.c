@@ -59,7 +59,7 @@ bool_t
             if (trait_of(sched) != io_sched_t) return false_t;
 
             self->sched = ref (sched);
-            self->in    = 0;
+            self->in    = -1;
             return true_t;
 }
 
