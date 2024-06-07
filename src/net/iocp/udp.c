@@ -1,5 +1,7 @@
 #include "udp.h"
+#include "../../io.h"
 
+#include "net.h"
 #include "v4.h"
 #include "v6.h"
 
@@ -20,9 +22,9 @@ bool_t
             io_sched* sched = null_t; if (par_count > 0) sched = va_arg(par, io_sched*);
             if (trait_of(sched) != io_sched_t) sched = this_io_sched();
             if (trait_of(sched) != io_sched_t) return false_t;
-            par_udp->sched  = ref(sched)    ;
-            par_udp->udp_io = 0             ;
-            par_udp->udp    = INVALID_SOCKET;
+            par_udp->sched = ref(sched)    ;
+            par_udp->ioc   = null_t        ;
+            par_udp->udp   = INVALID_SOCKET;
             return true_t;
 }
 
@@ -59,14 +61,14 @@ bool_t
             );
 
             if (par->udp == INVALID_SOCKET) return false_t;
-            par->udp_io = CreateIoCompletionPort          (
+            par->ioc = CreateIoCompletionPort             (
                 par->udp       ,
                 par->sched->hnd,
                 par->sched     ,
                 0
             );
 
-            if (!par->udp_io)            {
+            if (!par->ioc)               {
                 closesocket(par->udp)    ;
                 par->udp = INVALID_SOCKET;
                 return false_t;
