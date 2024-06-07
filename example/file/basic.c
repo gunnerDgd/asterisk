@@ -6,9 +6,9 @@
 
 #include <stdio.h>
 
-use             (
-    dep (thread),
-    dep (net)   ,
+use            (
+    dep (thread)
+    dep (net)
     dep (io)
 )
 
@@ -37,13 +37,9 @@ run_async()                            {
     fut2 = file_read(file_1, buf1, 14);
     fut3 = file_read(file_1, buf2, 14);
 
-    await(fut1);
-    await(fut2);
-    await(fut3);
-
-    printf("File Read0 : %d Bytes - %s\n", fut_ret(fut1), buf0);
-    printf("File Read1 : %d Bytes - %s\n", fut_ret(fut2), buf1);
-    printf("File Read2 : %d Bytes - %s\n", fut_ret(fut3), buf2);
+    printf("File Read0 : %d Bytes - %s", await(fut1), buf0);
+    printf("File Read1 : %d Bytes - %s", await(fut2), buf1);
+    printf("File Read2 : %d Bytes - %s", await(fut3), buf2);
     drop(buf0)  ;
     drop(buf1)  ;
     drop(buf2)  ;

@@ -4,19 +4,19 @@
 
 #include <stdio.h>
 
-use         (
-    dep(net),
+use        (
+    dep(net)
     dep(io)
 )
 
 run_async()                                                          {
-    end *end_1 = make (end) from (2, make_v4_cstr("127.0.0.1"), 6500);
+    end *end_1 = make (end) from (2, make_v4_cstr("127.0.0.1"), 6501);
     tcp *tcp_1 = make (tcp) from (0);
-    if (!tcp_1) return;
-    if (!end_1) return;
+    if (!tcp_1) return 0;
+    if (!end_1) return 0;
 
     u8_t* buf  = new (u8_t[64]);
-    if  (!await(tcp_conn(tcp_1, end_1))) return;
+    if  (!await(tcp_conn(tcp_1, end_1))) return 0;
 
     mem_set(buf, 0x00, 64);
     printf ("Connected\n");
