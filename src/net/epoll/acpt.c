@@ -47,6 +47,7 @@ bool_t
             if (trait_of(self) != acpt_t) return false_t;
             if (trait_of(end)  != end_t)  return false_t;
             if (trait_of(&self->pro))     return false_t;
+            self->end = end;
 
             if (pro == tcp_t) return do_tcp_open(self);
             return false_t;
