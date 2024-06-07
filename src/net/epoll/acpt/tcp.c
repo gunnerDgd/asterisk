@@ -7,15 +7,15 @@
 u64_t
     do_tcp_poll
         (io_res* self)                                                           {
-            if (trait_of(self) != io_res_t) return fut_err; tcp *acpt = self->dev;
-            if (trait_of(acpt) != tcp_t)    return fut_err; tcp *tcp  = self->arg;
+            if (trait_of(self) != io_res_t) return fut_err; tcp *dev = self->dev;
+            if (trait_of(dev)  != tcp_t)    return fut_err; tcp *tcp = self->arg;
             if (trait_of(tcp)  != tcp_t)    return fut_err;
-            if (io_poll_hang(&acpt->poll))  return fut_err;
-            if (io_poll_err (&acpt->poll))  return fut_err;
+            if (io_poll_hang(&dev->poll))  return fut_err;
+            if (io_poll_err (&dev->poll))  return fut_err;
 
-            if (!io_poll_in(&acpt->poll)) io_sched_run(acpt->sched);
-            if (!io_poll_in(&acpt->poll)) return fut_pend;
-            tcp->tcp = accept(acpt->tcp, 0, 0);
+            if (!io_poll_in(&dev->poll)) io_sched_run(dev->sched);
+            if (!io_poll_in(&dev->poll)) return fut_pend;
+            tcp->tcp = accept(dev->tcp, 0, 0);
 
             if (!make_at(&tcp->poll, io_poll) from (2, tcp->sched, tcp->tcp)) return fut_err;
             self->ret = (u64_t) tcp;
@@ -50,7 +50,7 @@ bool_t
             if (!af)                 return false_t;
 
             if (bind  (tcp->tcp, &self->end->all, af)) return false_t;
-            if (listen(tcp->tcp, -1))                 return false_t;
+            if (listen(tcp->tcp, -1))                  return false_t;
             return true_t;
 }
 
@@ -72,7 +72,7 @@ fut*
 
 		    if (trait_of(arg) != tcp_t) goto err;
 		    if (trait_of(dev) != tcp_t) goto err;
-            res = make (io_res) from (4, self, null_t, 0, arg);
+            res = make (io_res) from (4, dev, null_t, 0, arg);
             ret = make (fut)    from (2, &do_tcp, res);
 
             if (trait_of(res) != io_res_t) goto err;
