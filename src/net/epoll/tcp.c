@@ -5,7 +5,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>
 
@@ -22,16 +21,21 @@ obj_trait* tcp_t = &tcp_trait;
 
 u64_t
     tcp_conn_do_poll
-        (io_res* self)                                                          {
-            if (trait_of(self) != io_res_t) return fut_err; tcp* tcp = self->dev;
-            if (trait_of(tcp)  != tcp_t)    return fut_err;
-            if (io_poll_hang(&tcp->poll))  return fut_err;
-            if (io_poll_err (&tcp->poll))  return fut_err;
+        (io_res* self)                                                    {
+            if (trait_of(self) != io_res_t) goto err; tcp* tcp = self->dev;
+            if (trait_of(tcp)  != tcp_t)    goto err;
 
-            if (!io_poll_out(&tcp->poll)) io_sched_run(tcp->sched);
-            if (!io_poll_out(&tcp->poll)) return fut_pend;
+            if (!io_poll_out(&tcp->poll)) io_sched_run (tcp->sched);
+            if (!io_poll_out(&tcp->poll)) goto pend;
+            if (io_poll_hang(&tcp->poll)) goto err;
+            if (io_poll_err (&tcp->poll)) goto err;
             io_poll_mask_out(&tcp->poll, false_t);
+            self->stat = fut_ready;
             return fut_ready;
+    pend:   self->stat = fut_pend;
+            return fut_pend;
+    err:    self->stat = fut_err;
+            return fut_err;
 }
 
 void*
@@ -39,6 +43,7 @@ void*
         (io_res* par)                                                        {
             if (trait_of(par) != io_res_t) return null_t; tcp* tcp = par->dev;
             if (trait_of(tcp) != tcp_t)    return null_t;
+            if (par->stat != fut_ready)    return null_t;
             return tcp;
 }
 
@@ -110,6 +115,7 @@ bool_t
 		(tcp* self, u32_t count, va_list arg)		     	                        {
 			io_sched  *sched = null_t; if (count > 0) sched = va_arg(arg, io_sched*);
 			obj_trait *af    = null_t; if (count > 1) af    = va_arg(arg, void*)    ;
+			if (trait_of(sched) != io_sched_t) sched = this_io_sched();
 			if (trait_of(sched) != io_sched_t) return false_t;
 			if (!af)                                         {
                 self->sched = ref (sched);
@@ -148,11 +154,10 @@ bool_t
             if (self->tcp)  return true_t ;
 
             self->tcp = socket(res, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);
-            if (self->tcp <= 0)                                                  goto open_err;
-            if (!make_at(&self->poll, io_poll) from (2, self->sched, self->tcp)) goto open_err;
+            if (self->tcp <= 0)                                                  goto err;
+            if (!make_at(&self->poll, io_poll) from (2, self->sched, self->tcp)) goto err;
             return true_t;
-    open_err:
-            close(self->tcp);
+    err:    close(self->tcp);
             self->tcp    = 0;
             return false_t;
 
@@ -164,6 +169,7 @@ fut*
             if (trait_of(self) != tcp_t)      return null_t;
 			if (trait_of(end)  != end_t)      return null_t;
 			if (!tcp_open(self, end_af(end))) return null_t;
+            io_poll_mask_out(&self->poll, true_t);
 			io_res *res = null_t;
 			fut    *ret = null_t;
 
@@ -174,8 +180,6 @@ fut*
 
             connect (self->tcp, &end->all, end->len);
             if (errno != EINPROGRESS) goto err;
-
-            io_poll_mask_out(&self->poll, true_t);
             del   (res);
             return ret ;
     err:    del      (res);
