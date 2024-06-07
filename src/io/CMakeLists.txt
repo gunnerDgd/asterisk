@@ -28,7 +28,7 @@ if    (UNIX AND NOT APPLE)
     )
 
     set_target_properties(asterisk-io-include PROPERTIES LINKER_LANGUAGE C)
-    target_link_libraries(asterisk-io crisp)
+    target_link_libraries(asterisk-io crisp asterisk-fs)
 endif ()
 
 if   (WIN32)
@@ -45,8 +45,8 @@ if   (WIN32)
 
         ../io.h
         ../io.c
-            epoll/vma.h
-            epoll/vma.c
+        epoll/vma.h
+        epoll/vma.c
     )
 
     add_library (asterisk-io-include STATIC

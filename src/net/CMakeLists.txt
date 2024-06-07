@@ -37,7 +37,7 @@ if (UNIX AND NOT APPLE)
     add_library(asterisk-net-include STATIC
         ../../include/net.h
         ../../include/net/end.h
-        ../../include/net/tcp_acpt.h
+        ../../include/net/acpt.h
         ../../include/net/tcp.h
         ../../include/net/udp.h
         ../../include/net/v6.h
@@ -84,7 +84,7 @@ if (WIN32)
     add_library(asterisk-net-include STATIC
         ../../include/net.h
         ../../include/net/end.h
-        ../../include/net/tcp_acpt.h
+            ../../include/net/acpt.h
         ../../include/net/tcp.h
         ../../include/net/udp.h
         ../../include/net/v6.h

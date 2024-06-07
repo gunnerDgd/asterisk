@@ -42,12 +42,10 @@ else  ()
     endif()
 
     if   (NOT PRESET_FEATURE_THREAD)
-        message("[asterisk] asterisk requires \"collections\" feature of crisp.")
+        message("[asterisk] asterisk requires \"thread\" feature of crisp.")
         message(SEND_ERROR)
     endif()
 endif ()
-
-
 
 include_directories(lib/crisp/include)
 add_subdirectory   (lib)
