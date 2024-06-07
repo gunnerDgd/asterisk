@@ -1,7 +1,7 @@
 #ifndef __NET_IOCP_V6_H__
 #define __NET_IOCP_V6_H__
 
-#include "net.h"
+#include <WS2tcpip.h>
 
 #include <core.h>
 #include <collections.h>

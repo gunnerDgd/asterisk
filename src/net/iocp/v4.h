@@ -4,7 +4,7 @@
 #include <core.h>
 #include <collections.h>
 
-#include "net.h"
+#include <WS2tcpip.h>
 
 extern obj_trait* v4_t ;
 typedef struct    v4   {

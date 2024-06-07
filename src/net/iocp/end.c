@@ -58,22 +58,6 @@ void
             return;
 }
 
-bool_t
-    end_v4
-        (end* par)                                    {
-            if (!par)                   return false_t;
-            if (trait_of(par) != end_t) return false_t;
-            return par->af == AF_INET;
-}
-
-bool_t
-    end_v6
-        (end* par)                                    {
-            if (!par)                   return false_t;
-            if (trait_of(par) != end_t) return false_t;
-            return par->af == AF_INET6;
-}
-
 obj_trait* 
     end_af
         (end* par)                                   {
@@ -89,7 +73,7 @@ struct v4*
     end_as_v4
         (end* par)                                   {
             if (trait_of(par) != end_t) return null_t;
-            if (!end_v4 (par))          return null_t;
+            if (par->af != AF_INET)     return null_t;
             v4* ret = make (v4) from (0);
 
             if (trait_of(ret) != v4_t) return null_t;
@@ -101,7 +85,7 @@ struct v6*
     end_as_v6
         (end* par)                                   {
             if (trait_of(par) != end_t) return null_t;
-            if (!end_v6 (par))          return null_t;
+            if (par->af != AF_INET6)    return null_t;
             v6* ret = make (v6) from (0);
 
             if (trait_of(ret) != v6_t) return null_t;
