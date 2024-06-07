@@ -19,7 +19,7 @@ run_async()                          {
     vma* va = make (vma) from (2, back, 4 KB);
     printf ("VMA : %08x\n", vma_ptr(va));
 
-    mem_copy(vma_ptr(va), "Hello World", 11);
+    mem_copy(vma_ptr(va), L"Hello World", sizeof(L"Hello World"));
     vma_sync(va);
 
     del (back);
