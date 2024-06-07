@@ -7,11 +7,11 @@ struct file;
 
 extern obj_trait *vma_t;
 typedef struct    vma  {
-    obj          head;
-    struct file *file;
-    u64_t        len;
-    u64_t        off;
-    any_t        ptr;
+    obj   head;
+    obj*  dev;
+    u64_t len;
+    u64_t off;
+    any_t ptr;
 }   vma;
 
 bool_t vma_new  (vma*, u32_t, va_list);

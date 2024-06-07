@@ -16,26 +16,33 @@ obj_trait *vma_t = &vma_trait;
 
 bool_t
     vma_new
-        (vma* self, u32_t count, va_list arg)                            {
-            file *file = null_t; if (count > 0) file = va_arg(arg, any_t);
-            u64_t len  = 4 KB;   if (count > 1) len  = va_arg(arg, u64_t);
-            u64_t off  = 0ull;   if (count > 2) off  = va_arg(arg, u64_t);
-            int   fd   =   -1;
+        (vma* self, u32_t count, va_list arg)                          {
+            obj  *dev = null_t; if (count > 0) dev = va_arg(arg, any_t);
+            u64_t len = 4 KB;   if (count > 1) len = va_arg(arg, u64_t);
+            u64_t off = 0ull;   if (count > 2) off = va_arg(arg, u64_t);
 
-            if (trait_of(file) == file_t) fd = file->file;
-            self->ptr = mmap                             (
-                null_t                ,
-                len                   ,
-                PROT_READ | PROT_WRITE,
-                MAP_ANONYMOUS         ,
-                fd                    ,
+            int flag = MAP_SHARED;
+            int per  =  0;
+            int fd   = -1;
+
+            if (trait_of(dev) == file_t) { per = PROT_READ | PROT_WRITE; fd = ((file*)dev)->file; }
+            if (trait_of(dev) == out_t)  { per = PROT_WRITE;             fd = ((out*) dev)->out ; }
+            if (trait_of(dev) == in_t)   { per = PROT_READ ;             fd = ((in*)  dev)->in  ; }
+            if (fd == -1) flag |= MAP_ANONYMOUS;
+            if (per == 0) return false_t;
+            self->ptr = mmap            (
+                null_t,
+                len   ,
+                per   ,
+                flag  ,
+                fd    ,
                 off
             );
 
             if (self->ptr == (any_t)-1) return false_t;
-            self->file = ref (file);
-            self->len  = len;
-            self->off  = off;
+            self->dev = ref (dev);
+            self->len = len;
+            self->off = off;
             return true_t;
 }
 
@@ -47,9 +54,10 @@ bool_t
 
 void
     vma_del
-        (vma* self)                      {
-            munmap (self->ptr, self->len);
-            del    (self->file);
+        (vma* self)                              {
+            msync (self->ptr, self->len, MS_SYNC);
+            munmap(self->ptr, self->len);
+            del   (self->dev);
 }
 
 bool_t
