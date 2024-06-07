@@ -59,8 +59,11 @@ if (WIN32)
         iocp/tcp.h
         iocp/tcp.c
 
-        iocp/tcp_acpt.h
-        iocp/tcp_acpt.c
+        iocp/acpt.h
+        iocp/acpt.c
+
+        iocp/acpt/tcp.h
+        iocp/acpt/tcp.c
 
         iocp/udp.h
         iocp/udp.c
@@ -84,7 +87,7 @@ if (WIN32)
     add_library(asterisk-net-include STATIC
         ../../include/net.h
         ../../include/net/end.h
-            ../../include/net/acpt.h
+        ../../include/net/acpt.h
         ../../include/net/tcp.h
         ../../include/net/udp.h
         ../../include/net/v6.h

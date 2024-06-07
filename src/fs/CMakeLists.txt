@@ -33,18 +33,22 @@ if    (WIN32)
         iocp/file.h
         iocp/file.c
 
-        iocp/file_map.h
-        iocp/file_map.c
+        iocp/out.h
+        iocp/out.c
+
+        iocp/in.h
+        iocp/in.c
 
         file.h
-
-            ../fs.h
+        ../fs.h
         ../fs.c
     )
 
     add_library(asterisk-fs-include STATIC
         ../../include/fs.h
         ../../include/fs/file.h
+        ../../include/fs/out.h
+        ../../include/fs/in.h
     )
 
     set_target_properties(asterisk-fs-include PROPERTIES LINKER_LANGUAGE C)
