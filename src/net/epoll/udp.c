@@ -43,18 +43,18 @@ u64_t
 
 u64_t
     udp_recv_do_ret
-        (io_res* par)                                                         {
-            if (trait_of(par) != io_res_t) return fut_err; udp* udp = par->dev;
-            if (trait_of(udp) != udp_t)    return fut_err;
-            return par->ret;
+        (io_res* self)                                                          {
+            if (trait_of(self) != io_res_t) return fut_err; udp* udp = self->dev;
+            if (trait_of(udp)  != udp_t)    return fut_err;
+            return self->ret;
 }
 
 i64_t
     udp_recv_from_do_poll
-        (io_res* par)                                                         {
-            if (trait_of(par) != io_res_t) return fut_err; udp *udp = par->dev;
-            if (trait_of(udp) != udp_t)    return fut_err; end *end = par->arg;
-            if (trait_of(end) != end_t)    return fut_err;
+        (io_res* self)                                                          {
+            if (trait_of(self) != io_res_t) return fut_err; udp *udp = self->dev;
+            if (trait_of(udp)  != udp_t)    return fut_err; end *end = self->arg;
+            if (trait_of(end)  != end_t)    return fut_err;
             if (io_poll_hang(&udp->poll))  return fut_err;
             if (io_poll_err (&udp->poll))  return fut_err;
 
@@ -62,14 +62,14 @@ i64_t
             if (!io_poll_in (&udp->poll)) return fut_pend;
             i64_t ret = recvfrom                         (
                 udp->udp ,
-                par->buf ,
-                par->len ,
+                self->buf,
+                self->len,
                 udp->flag,
                 &end->all,
                 &end->len
             );
 
-            if (ret == -1) return fut_err ; par->ret += ret;
+            if (ret == -1) return fut_err ; self->ret += ret;
             if (ret ==  0) return fut_pend;
             return fut_ready;
 }
@@ -103,10 +103,10 @@ u64_t
 
 u64_t
     udp_send_do_ret
-        (io_res* par)                                                         {
-            if (trait_of(par) != io_res_t) return fut_err; udp* udp = par->dev;
-            if (trait_of(udp) != udp_t)    return fut_err;
-            return par->ret;
+        (io_res* self)                                                          {
+            if (trait_of(self) != io_res_t) return fut_err; udp* udp = self->dev;
+            if (trait_of(udp)  != udp_t)    return fut_err;
+            return self->ret;
 }
 
 i64_t
@@ -147,6 +147,7 @@ bool_t
         (udp* self, u32_t count, va_list arg)                                       {
             io_sched  *sched = null_t; if (count > 0) sched = va_arg(arg, io_sched*);
             obj_trait *af    = null_t; if (count > 1) af    = va_arg(arg, void*)    ;
+            if (trait_of(sched) != io_sched_t) sched = this_io_sched();
             if (trait_of(sched) != io_sched_t) return false_t;
             if (!af)                                         {
                 self->sched = ref (sched);
@@ -164,54 +165,54 @@ bool_t
 
 bool_t 
     udp_clone
-        (udp* par, udp* par_clone) {
+        (udp* self, udp* clone) {
             return false_t;
 }
 
 void   
     udp_del
-        (udp* par)               {
-            udp_close(par)       ;
-            del      (par->sched);
+        (udp* self)               {
+            udp_close(self)       ;
+            del      (self->sched);
 }
 
 bool_t
     udp_open
-        (udp* par, obj_trait* par_af)                              {
-            if (trait_of(par) != udp_t) return false_t; int af = -1;
+        (udp* self, obj_trait* par_af)                              {
+            if (trait_of(self) != udp_t) return false_t; int af = -1;
             if (par_af == v4_t) af = AF_INET ;
             if (par_af == v6_t) af = AF_INET6;
             if (af == -1) return false_t;
-            if (par->udp) return true_t ;
+            if (self->udp) return true_t ;
 
-            par->udp = socket(af, SOCK_DGRAM | SOCK_NONBLOCK, IPPROTO_UDP);
-            if (par->udp <= 0)                                                goto open_err;
-            if (!make_at(&par->poll, io_poll) from (2, par->sched, par->udp)) goto open_err;
+            self->udp = socket(af, SOCK_DGRAM | SOCK_NONBLOCK, IPPROTO_UDP);
+            if (self->udp <= 0)                                                  goto open_err;
+            if (!make_at(&self->poll, io_poll) from (2, self->sched, self->udp)) goto open_err;
             return true_t;
     open_err:
-            close(par->udp);
-            par->udp   = 0;
+            close(self->udp);
+            self->udp    = 0;
             return false_t;
 }
 
 bool_t 
     udp_conn
-        (udp* par, end* par_end)                          {
-            if (trait_of(par_end) != end_t) return false_t;
-            if (trait_of(par)     != udp_t) return false_t;
+        (udp* self, end* end)                          {
+            if (trait_of(self) != udp_t) return false_t;
+            if (trait_of(end)  != end_t) return false_t;
 
-            if (!udp_open(par, end_af(par_end)))             return false_t;
-            if (bind(par->udp, &par_end->all, par_end->len)) return false_t;
+            if (!udp_open(self, end_af(end)))         return false_t;
+            if (bind(self->udp, &end->all, end->len)) return false_t;
             return true_t;
 }
 
 void   
     udp_close
-        (udp* par)                            {
-            if (trait_of(par) != udp_t) return;
-            close(par->udp)  ;
-            del  (&par->poll);
-            par->udp = 0;
+        (udp* self)                            {
+            if (trait_of(self) != udp_t) return;
+            close(self->udp)  ;
+            del  (&self->poll);
+            self->udp = 0;
 }
 
 fut*
