@@ -60,11 +60,11 @@ bool_t
             if (trait_of(self) != file_t) return false_t;
             if (self->file != -1)         return false_t;
             if (!name)                    return false_t;
-            self->file = open (name, O_RDWR);
+            self->file = open (name, O_RDWR | O_NONBLOCK);
 
-            if (self->file == -1) return false_t;
-            self->out.out = self->file;
-            self->in .in  = self->file;
+            if (self->file == -1)                 return false_t;
+            if (!out_open_cstr(&self->out, name)) return false_t;
+            if (!in_open_cstr (&self->in , name)) return false_t;
             return true_t;
 }
 
@@ -84,9 +84,9 @@ bool_t
             if (!name)                    return false_t;
 
             self->file = open(name, O_RDWR | O_NONBLOCK | O_CREAT, 0755);
-            if (self->file <= 0) return false_t;
-            self->out.out = self->file;
-            self->in .in  = self->file;
+            if (self->file == -1)                 return false_t;
+            if (!out_open_cstr(&self->out, name)) return false_t;
+            if (!in_open_cstr (&self->in , name)) return false_t;
             return true_t;
 }
 
