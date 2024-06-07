@@ -15,7 +15,7 @@ any_t
     do_tcp_ret
         (struct io_res*);
 
-fut_ops
+extern fut_ops
     do_tcp;
 
 bool_t
