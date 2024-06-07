@@ -1,11 +1,9 @@
 #ifndef __NET_IOCP_NET_H__
 #define __NET_IOCP_NET_H__
 
-#include <WinSock2.h>
-#include "../../io.h"
-
 #include <WS2tcpip.h>
 #include <MSWSock.h>
+#include <core.h>
 
 extern LPFN_CONNECTEX    ConnectEx       ;
 extern GUID			     ConnectExGuid   ;
