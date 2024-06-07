@@ -84,7 +84,7 @@ bool_t
             if (self->out != -1)         return false_t;
             if (!name)                   return false_t;
 
-            self->out = open (name, O_WRONLY | O_CREAT, 0755);
+            self->out = open (name, O_WRONLY | O_CREAT | O_NONBLOCK, 0755);
             if (self->out <= 0) return false_t;
             return true_t;
 }
@@ -95,7 +95,7 @@ bool_t
             if (trait_of(self) != out_t) return false_t;
             if (self->out != -1)         return false_t;
             if (!name)                   return false_t;
-            self->out = open (name, O_RDONLY);
+            self->out = open (name, O_WRONLY | O_NONBLOCK);
 
             if (self->out <= 0) return false_t;
             return true_t;

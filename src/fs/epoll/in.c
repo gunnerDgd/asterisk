@@ -14,8 +14,8 @@ static u64_t
             u64_t len = self->len - self->ret;
             int   fd  = in->in;
             i64_t ret = read  (
-                fd     ,
-                buf    ,
+                fd ,
+                buf,
                 len
             );
 
@@ -82,7 +82,7 @@ bool_t
             if (trait_of(self) != in_t) return false_t;
             if (self->in != -1)         return false_t;
             if (!name)                  return false_t;
-            self->in = open (name, O_RDONLY | O_CREAT, 0755);
+            self->in = open (name, O_RDONLY | O_NONBLOCK | O_CREAT, 0755);
 
             if (self->in <= 0) return false_t;
             return true_t;
@@ -94,7 +94,7 @@ bool_t
             if (trait_of(self) != in_t) return false_t;
             if (self->in != -1)         return false_t;
             if (!name)                  return false_t;
-            self->in = open (name, O_RDONLY);
+            self->in = open (name, O_RDONLY | O_NONBLOCK);
 
             if (self->in <= 0) return false_t;
             return true_t;
