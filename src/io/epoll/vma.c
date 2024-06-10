@@ -22,15 +22,14 @@ bool_t
             u64_t off = 0ull;   if (count > 2) off = va_arg(arg, u64_t);
 
             int flag = MAP_SHARED;
-            int per  =  0;
+            int per  =  PROT_READ | PROT_WRITE;
             int fd   = -1;
 
             if (trait_of(dev) == file_t) { per = PROT_READ | PROT_WRITE; fd = ((file*)dev)->file; }
             if (trait_of(dev) == out_t)  { per = PROT_WRITE;             fd = ((out*) dev)->out ; }
             if (trait_of(dev) == in_t)   { per = PROT_READ ;             fd = ((in*)  dev)->in  ; }
             if (fd == -1) flag |= MAP_ANONYMOUS;
-            if (per == 0) return false_t;
-            self->ptr = mmap            (
+            self->ptr = mmap                   (
                 null_t,
                 len   ,
                 per   ,
