@@ -2,8 +2,6 @@
 #include <net.h>
 #include <core.h>
 
-#include <stdio.h>
-
 use        (
     dep (io)
     dep (net)
@@ -23,7 +21,7 @@ run_async()                                                {
     }
 
     u64_t len = (u64_t) await(udp_recv(udp_1, buf, 64));
-    printf("Received %s (%d Bytes)\n", buf, len);
+    println("Received %s (%d Bytes)\n", buf, len);
 
     drop(buf);
     del (udp_1);

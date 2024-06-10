@@ -2,8 +2,6 @@
 #include <net.h>
 #include <core.h>
 
-#include <stdio.h>
-
 use        (
     dep(net)
     dep(io)
@@ -16,11 +14,14 @@ run_async()                                                          {
     if (!end_1) return 0;
 
     u8_t* buf  = new (u8_t[64]);
-    if  (!await(tcp_conn(tcp_1, end_1))) return 0;
+    if  (!await(tcp_conn(tcp_1, end_1))) {
+        println("Connect Faied");
+        return -1;
+    }
 
     mem_set(buf, 0x00, 64);
-    printf ("Connected\n");
-    printf ("Received %s (%d Bytes).\n", buf, await(tcp_recv(tcp_1, buf, 64)));
+    println("Connected\n");
+    println("Received %s (%d Bytes).\n", buf, await(tcp_recv(tcp_1, buf, 64)));
 
     drop(buf);
     del (end_1);

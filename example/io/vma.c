@@ -2,8 +2,6 @@
 #include <io.h>
 #include <fs.h>
 
-#include <stdio.h>
-
 use        (
     dep (io)
     dep (fs)
@@ -17,7 +15,7 @@ run_async()                          {
 
     file_resize (back, 4 KB);
     vma* va = make (vma) from (2, back, 4 KB);
-    printf ("VMA : %08x\n", vma_ptr(va));
+    println("VMA : %08x\n", vma_ptr(va));
 
     mem_copy(vma_ptr(va), L"Hello World", sizeof(L"Hello World"));
     vma_sync(va);

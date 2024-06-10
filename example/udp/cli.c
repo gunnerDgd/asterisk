@@ -2,8 +2,6 @@
 #include <net.h>
 #include <core.h>
 
-#include <stdio.h>
-#include <stdlib.h>
 
 use         (
     dep (io)
@@ -16,7 +14,7 @@ run_async()                                                          {
 
     udp_open(udp_1, v4_t);
     u64_t len = (u64_t) await(udp_send_to(udp_1, "Hello World\n", 12, end_1));
-    printf("Sent %d Bytes\n", len);
+    println("Sent %d Bytes", len);
     del(udp_1);
     del(end_1);
     return 0;
