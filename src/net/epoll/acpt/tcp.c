@@ -10,16 +10,20 @@ u64_t
             if (trait_of(self) != io_res_t) return fut_err; tcp *dev = self->dev;
             if (trait_of(dev)  != tcp_t)    return fut_err; tcp *tcp = self->arg;
             if (trait_of(tcp)  != tcp_t)    return fut_err;
-            if (io_poll_hang(&dev->poll))  return fut_err;
-            if (io_poll_err (&dev->poll))  return fut_err;
+            if (io_poll_hang(&dev->poll))   goto err;
+            if (io_poll_err (&dev->poll))   goto err;
 
             if (!io_poll_in(&dev->poll)) io_sched_run(dev->sched);
             if (!io_poll_in(&dev->poll)) return fut_pend;
             tcp->tcp = accept(dev->tcp, 0, 0);
 
-            if (!make_at(&tcp->poll, io_poll) from (2, tcp->sched, tcp->tcp)) return fut_err;
+            if (!make_at(&tcp->poll, io_poll) from (2, tcp->sched, tcp->tcp)) goto err;
             self->ret = (u64_t) tcp;
             return fut_ready;
+    err:    self->arg = null_t;
+            self->ret = 0ull;
+            del (tcp);
+            return fut_err;
 }
 
 any_t
