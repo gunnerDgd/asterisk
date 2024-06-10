@@ -24,8 +24,11 @@ io_sched* this_io_sched();
     int run         ()                                                           {\
         io_sched *sched  = this_io_sched();                                       \
         fut      *run_io = io_sched_fut (sched);                                  \
-        fut      *run    = async        ((void*(*)(void*))run_async_do, null_t);\
+        fut      *run    = async        ((void*(*)(void*))run_async_do, null_t);  \
         for ( ; fut_poll(run) == fut_pend ; fut_poll(run_io));                    \
+        u64_t  ret = (u64_t) fut_ret(run);                                        \
+        del   (run);                                                              \
+        return ret;                                                               \
     }                                                                             \
     int run_async_do()                                                            \
 
