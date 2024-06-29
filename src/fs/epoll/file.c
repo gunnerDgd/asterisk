@@ -6,26 +6,15 @@
 #include <fcntl.h>
 #include <errno.h>
 
-obj_trait file_trait = make_trait (
-    file_new    ,
-    file_clone  ,
-    null_t      ,
-    file_del    ,
-    sizeof(file),
-    null_t
-);
+static bool_t
+    do_new
+        (file* self, u32_t count, va_list arg)                             {
+            io_run *run = null_t; if (count > 0) run = va_arg(arg, io_run*);
+            if (trait_of(run) != io_run_t) run = this_io_run();
+            if (trait_of(run) != io_run_t) return false_t;
 
-obj_trait* file_t = &file_trait;
-
-bool_t
-    file_new
-        (file* self, u32_t count, va_list arg)                                     {
-            io_sched *sched = null_t; if (count > 0) sched = va_arg(arg, io_sched*);
-            if (trait_of(sched) != io_sched_t) sched = this_io_sched();
-            if (trait_of(sched) != io_sched_t) return false_t;
-
-            if (!make_at(&self->out, out) from (1, sched)) goto err;
-            if (!make_at(&self->in , in)  from (1, sched)) goto err;
+            if (!make_at(&self->out, out) from (1, run)) goto err;
+            if (!make_at(&self->in , in)  from (1, run)) goto err;
             self->file = -1;
             return true_t;
     err:    del (&self->out);
@@ -33,60 +22,56 @@ bool_t
             return false_t;
 }
 
-bool_t 
-    file_clone
+static bool_t
+    do_clone
         (file* self, file* clone) {
             return false_t;
 }
 
-void   
-    file_del
+static void
+    do_del
         (file* self)        {
             del (&self->out);
             del (&self->in);
 }
 
-bool_t
-    file_open
-        (file* self, str* name)                         {
-            if (trait_of(self) != file_t) return false_t;
-            if (trait_of(name) != str_t)  return false_t;
-            return file_open_cstr(self, str_ptr(name));
-}
+static obj_trait
+    do_file = make_trait (
+        do_new      ,
+        do_clone    ,
+        null_t      ,
+        do_del      ,
+        sizeof(file),
+        null_t
+);
+
+obj_trait* file_t = &do_file;
 
 bool_t
-    file_open_cstr
+    file_open
         (file* self, const char* name)                  {
             if (trait_of(self) != file_t) return false_t;
             if (self->file != -1)         return false_t;
             if (!name)                    return false_t;
             self->file = open (name, O_RDWR | O_NONBLOCK);
 
-            if (self->file == -1)                 return false_t;
-            if (!out_open_cstr(&self->out, name)) return false_t;
-            if (!in_open_cstr (&self->in , name)) return false_t;
+            if (self->file == -1)            return false_t;
+            if (!out_open(&self->out, name)) return false_t;
+            if (!in_open (&self->in , name)) return false_t;
             return true_t;
 }
 
-bool_t
-    file_create
-        (file* self, str* name)                         {
-            if (trait_of(name) != str_t)  return false_t;
-            if (trait_of(self) != file_t) return false_t;
-            return file_create_cstr(self, str_ptr(name));
-}
-
 bool_t 
-    file_create_cstr
+    file_new
         (file* self, const char* name)                  {
             if (trait_of(self) != file_t) return false_t;
             if (self->file != -1)         return false_t;
             if (!name)                    return false_t;
 
             self->file = open(name, O_RDWR | O_NONBLOCK | O_CREAT, 0755);
-            if (self->file == -1)                 return false_t;
-            if (!out_open_cstr(&self->out, name)) return false_t;
-            if (!in_open_cstr (&self->in , name)) return false_t;
+            if (self->file == -1)            return false_t;
+            if (!out_open(&self->out, name)) return false_t;
+            if (!in_open (&self->in , name)) return false_t;
             return true_t;
 }
 
@@ -121,7 +106,7 @@ u64_t
 }
 
 bool_t
-    file_resize
+    file_trunc
         (file* self, u64_t len)                           {
             if (trait_of (self) != file_t)  return false_t;
             if (ftruncate(self->file, len)) return false_t;
