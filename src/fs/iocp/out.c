@@ -1,61 +1,54 @@
 #include "out.h"
 
-obj_trait out_trait = make_trait (
-    out_new    ,
-    out_clone  ,
-    null_t    ,
-    out_del    ,
-    sizeof(out),
-    null_t
-);
-
-obj_trait *out_t = &out_trait;
-
-bool_t
-    out_new
-        (out* self, u32_t count, va_list arg)                                       {
-            io_sched *sched = null_t; if (count > 0) sched = va_arg(arg, io_sched*);
-            if (trait_of(sched) != io_sched_t)       sched = this_io_sched();
-            if (trait_of(sched) != io_sched_t)       return false_t;
-            if (sched->hnd == INVALID_HANDLE_VALUE)  return false_t;
+static bool_t
+    do_new
+        (out* self, u32_t count, va_list arg)                             {
+            io_run *run = null_t; if (count > 0)  run = va_arg(arg, any_t);
+            if (trait_of(run) != io_run_t)        run = this_io_run();
+            if (trait_of(run) != io_run_t)        return false_t;
+            if (run->hnd == INVALID_HANDLE_VALUE) return false_t;
             
-            self->sched = ref(sched)          ;
-            self->ioc   = INVALID_HANDLE_VALUE;
-            self->dev   = INVALID_HANDLE_VALUE;
-            self->pos   = 0                   ;
+            self->ioc = INVALID_HANDLE_VALUE;
+            self->dev = INVALID_HANDLE_VALUE;
+            self->run = ref(run);
+            self->pos = 0;
             return true_t;
 }
 
-bool_t 
-    out_clone
+static bool_t 
+    do_clone
         (out* self, out* clone) {
             return false_t;
 }
 
-void   
-    out_del
+static void   
+    do_del
         (out* self)               {
             CloseHandle(self->ioc);
             CloseHandle(self->dev);
-            del(self->sched);
+            del(self->run);
             
 }
 
-bool_t
-    out_open
-        (out* self, str* name)                         {
-            if (trait_of(name) != str_t) return false_t;
-            if (trait_of(self) != out_t) return false_t;
-            return out_open_cstr(self, str_ptr(name));
-}
+static obj_trait 
+    do_obj = make_trait (
+        do_new     ,
+        do_clone   ,
+        null_t     ,
+        do_del     ,
+        sizeof(out),
+        null_t
+);
+
+obj_trait* out_t = &do_obj;
+
 
 bool_t
-    out_open_cstr
-        (out* self, const char* name)                              {
-            if (trait_of(self)        != out_t)      return false_t;
-            if (trait_of(self->sched) != io_sched_t) return false_t;
-            if (self->dev != INVALID_HANDLE_VALUE)   return false_t;
-            self->dev = CreateFile                                 (
+    out_open
+        (out* self, const char* name)                            {
+            if (trait_of(self) != out_t)           return false_t;
+            if (self->dev != INVALID_HANDLE_VALUE) return false_t;
+            self->dev = CreateFile                               (
                 name                              ,
                 GENERIC_WRITE                     ,
                 FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -67,9 +60,9 @@ bool_t
 
             if (self->dev == INVALID_HANDLE_VALUE) return false_t;
             self->ioc = CreateIoCompletionPort                   (
-                self->dev       ,
-                self->sched->hnd,
-                self->sched     ,
+                self->dev     ,
+                self->run->hnd,
+                self->run     ,
                 0
             );
 
@@ -82,21 +75,12 @@ bool_t
             return true_t;
 }
 
-bool_t
-    out_create
-        (out* self, str* name)                          {
-            if (trait_of(name) != str_t) return false_t;
-            if (trait_of(self) != out_t)  return false_t;
-            return file_create_cstr(self, str_ptr(name));
-}
-
 bool_t 
-    out_create_cstr
-        (out* self, const char* name)                              {
-            if (trait_of(self)        != out_t)      return false_t;
-            if (trait_of(self->sched) != io_sched_t) return false_t;
-            if (self->dev != INVALID_HANDLE_VALUE)   return false_t;
-            self->dev = CreateFile                                 (
+    out_new
+        (out* self, const char* name)                            {
+            if (trait_of(self) != out_t)           return false_t;
+            if (self->dev != INVALID_HANDLE_VALUE) return false_t;
+            self->dev = CreateFile                               (
                 name                              ,
                 GENERIC_WRITE                     ,
                 FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -108,9 +92,9 @@ bool_t
 
             if (self->dev == INVALID_HANDLE_VALUE) return false_t;
             self->ioc = CreateIoCompletionPort                   (
-                self->dev       ,
-                self->sched->hnd,
-                self->sched     ,
+                self->dev     ,
+                self->run->hnd,
+                self->run     ,
                 0
             );
 
@@ -136,12 +120,11 @@ void
 
 fut*
     out_write
-        (out* self, u8_t* buf, u64_t len)                         {
-            if (trait_of(self)        != out_t)      return null_t;
-            if (trait_of(self->sched) != io_sched_t) return null_t;
-            if (self->dev == INVALID_HANDLE_VALUE)   return null_t;
+        (out* self, u8_t* buf, u64_t len)                       {
+            if (trait_of(self) != out_t)           return null_t;
+            if (self->dev == INVALID_HANDLE_VALUE) return null_t;
             
-            io_res *ret = make (io_res) from (1, self->sched);
+            io_res *ret = make (io_res) from (1, self->run);
             if (trait_of(ret) != io_res_t) return 0;
 
             ret->res.Offset     = -1;
