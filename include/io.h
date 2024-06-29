@@ -3,7 +3,7 @@
 
 #include <thread.h>
 
-#include "io/io_sched.h"
+#include "io/io_run.h"
 #include "io/vma.h"
 
 extern obj_trait *io_t;
