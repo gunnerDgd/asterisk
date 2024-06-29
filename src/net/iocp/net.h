@@ -1,9 +1,7 @@
-#ifndef __NET_IOCP_NET_H__
-#define __NET_IOCP_NET_H__
+#ifndef NET_IOCP_NET_H
+#define NET_IOCP_NET_H
 
-#include <WS2tcpip.h>
-#include <MSWSock.h>
-#include <core.h>
+#include "../../io.h"
 
 extern LPFN_CONNECTEX    ConnectEx       ;
 extern GUID			     ConnectExGuid   ;
