@@ -1,5 +1,5 @@
-#ifndef __IO_ALL_H__
-#define __IO_ALL_H__
+#ifndef IO_H
+#define IO_H
 
 #include "io/io_res.h"
 #include "io/io_sched.h"
@@ -8,19 +8,13 @@
 
 #include <thread.h>
 
-
 extern obj_trait *io_t;
 struct            io  {
-    obj      head ;
-    io_sched sched;
+    obj    head;
+    io_run run;
 };
 
-bool_t io_new  (struct io*, u32_t, va_list);
-bool_t io_clone(struct io*, struct io*)    ;
-bool_t io_ref  (struct io*)                ;
-void   io_del  (struct io*)                ;
-
-io_sched* this_io_sched();
+io_run* this_io_run();
 
 extern thd_local struct io io;
 

@@ -1,10 +1,10 @@
-#ifndef __TCP_H__
-#define __TCP_H__
+#ifndef NET_TCP_H
+#define NET_TCP_H
 
 #include "end.h"
 
 extern obj_trait* tcp_t;
-typedef struct    tcp { u8_t tcp[128]; } tcp;
+typedef struct    tcp { u8_t tcp[256]; } tcp;
 
 bool_t tcp_open (tcp*, obj_trait*)  ;
 fut*   tcp_conn (tcp*, end*)        ;

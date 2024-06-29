@@ -1,5 +1,5 @@
-#ifndef __NET_V4_H__
-#define __NET_V4_H__
+#ifndef NET_V4_H
+#define NET_V4_H
 
 #ifdef PRESET_WIN32
 #include "iocp/v4.h"

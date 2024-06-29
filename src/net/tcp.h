@@ -1,5 +1,5 @@
-#ifndef __NET_TCP_H__
-#define __NET_TCP_H__
+#ifndef NET_TCP_H
+#define NET_TCP_H
 
 #ifdef PRESET_WIN32
 #include "iocp/tcp.h"

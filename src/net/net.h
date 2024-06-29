@@ -1,5 +1,5 @@
-#ifndef __NET_NET_H__
-#define __NET_NET_H__
+#ifndef NET_NET_H
+#define NET_NET_H
 
 #ifdef PRESET_WIN32
 #include "iocp/net.h"

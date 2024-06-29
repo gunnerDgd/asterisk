@@ -1,5 +1,5 @@
-#ifndef __NET_EPOLL_UDP_H__
-#define __NET_EPOLL_UDP_H__
+#ifndef NET_EPOLL_UDP_H
+#define NET_EPOLL_UDP_H
 
 #include <core.h>
 
@@ -8,16 +8,12 @@
 
 extern obj_trait* udp_t;
 typedef struct    udp  {
-    obj       head ;
-    io_sched *sched;
-    u32_t     flag ;
-    io_poll   poll ;
-    int       udp  ;
+    obj       head;
+    u32_t     flag;
+    io_poll   poll;
+    io_run   *run;
+    int       udp;
 }   udp;
-
-bool_t udp_new      (udp*, u32_t, va_list)    ;
-bool_t udp_clone    (udp*, udp*)              ;
-void   udp_del      (udp*)                    ;
 
 bool_t udp_open     (udp*, obj_trait*)        ;
 bool_t udp_conn     (udp*, end*)              ;

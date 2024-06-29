@@ -1,5 +1,5 @@
-#ifndef __UDP_H__
-#define __UDP_H__
+#ifndef NET_UDP_H
+#define NET_UDP_H
 
 #include "end.h"
 

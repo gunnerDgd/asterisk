@@ -1,5 +1,5 @@
-#ifndef __IO_RES_H__
-#define __IO_RES_H__
+#ifndef IO_RES_H
+#define IO_RES_H
 
 #ifdef PRESET_WIN32
 #include "iocp/io_res.h"

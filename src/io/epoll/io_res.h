@@ -1,5 +1,5 @@
-#ifndef __EPOLL_IO_RES_H__
-#define __EPOLL_IO_RES_H__
+#ifndef EPOLL_IO_RES_H
+#define EPOLL_IO_RES_H
 
 #include <core.h>
 

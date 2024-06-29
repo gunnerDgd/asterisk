@@ -1,5 +1,5 @@
-#ifndef __NET_EPOLL_TCP_H__
-#define __NET_EPOLL_TCP_H__
+#ifndef NET_EPOLL_TCP_H
+#define NET_EPOLL_TCP_H
 
 #include <core.h>
 
@@ -8,16 +8,13 @@
 
 extern obj_trait* tcp_t;
 typedef struct    tcp  {
-	obj       head ;
-    io_sched *sched;
-    io_poll   poll ;
-	u64_t     flag ;
-	int       tcp  ;
-}	tcp;
+	obj     head;
+    io_poll poll;
+	u64_t   flag;
 
-bool_t tcp_new  (tcp*, u32_t, va_list);
-bool_t tcp_clone(tcp*, tcp*)	      ;
-void   tcp_del  (tcp*)			      ;
+    io_run *run;
+	int     tcp;
+}	tcp;
 
 bool_t tcp_open (tcp*, obj_trait*)    ;
 fut*   tcp_conn (tcp*, end*)		  ;

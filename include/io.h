@@ -1,5 +1,7 @@
-#ifndef __IO_H__
-#define __IO_H__
+#ifndef IO_H
+#define IO_H
+
+#include <thread.h>
 
 #include "io/io_sched.h"
 #include "io/vma.h"
@@ -7,29 +9,19 @@
 extern obj_trait *io_t;
 struct            io { u8_t io[2 KB]; };
 
-#ifdef PRESET_FEATURE_THREAD
-#ifdef PRESET_COMPILER_GCC
-extern __thread           struct io io;
-#elif  PRESET_COMPILER_MSVC
-extern __declspec(thread) struct io io;
-#endif
-#else
-extern struct io io;
-#endif
+extern thd_local struct io io;
 
-io_sched* this_io_sched();
+io_run* this_io_run();
 
-#define run_async()                                                               \
-    int run_async_do();                                                           \
-    int run         ()                                                           {\
-        io_sched *sched  = this_io_sched();                                       \
-        fut      *run_io = io_sched_fut (sched);                                  \
-        fut      *run    = async        ((void*(*)(void*))run_async_do, null_t);  \
-        for ( ; fut_poll(run) == fut_pend ; fut_poll(run_io));                    \
-        u64_t  ret = (u64_t) fut_ret(run);                                        \
-        del   (run);                                                              \
-        return ret;                                                               \
-    }                                                                             \
-    int run_async_do()                                                            \
+#define run_async()                                                      \
+    int run_async_do();                                                  \
+    int run         ()                                                  {\
+        fut *run = async ((void*(*)(void*))run_async_do, null_t);        \
+        for ( ; fut_poll(run) == fut_pend ; io_run_flush(this_io_run()));\
+        u64_t  ret = (u64_t) fut_ret(run);                               \
+        del   (run);                                                     \
+        return ret;                                                      \
+    }                                                                    \
+    int run_async_do()                                                   \
 
 #endif

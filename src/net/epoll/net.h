@@ -1,5 +1,5 @@
-#ifndef __NET_EPOLL_NET_H__
-#define __NET_EPOLL_NET_H__
+#ifndef NET_EPOLL_NET_H
+#define NET_EPOLL_NET_H
 
 #include <core.h>
 

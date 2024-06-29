@@ -1,5 +1,5 @@
-#ifndef __NET_EPOLL_V6_H__
-#define __NET_EPOLL_V6_H__
+#ifndef NET_EPOLL_V6_H
+#define NET_EPOLL_V6_H
 
 #include <core.h>
 #include <collections.h>
@@ -12,12 +12,6 @@ typedef struct    v6    {
     struct in6_addr v6  ;
 }   v6;
 
-v6*    make_v6_cstr(const char*);
-v6*    make_v6     (str*)       ;
-
-bool_t v6_new      (v6*, u32_t, va_list);
-bool_t v6_clone    (v6*, v6*)           ;
-void   v6_del      (v6*)                ;
-str*   v6_as_str   (v6*)                ;
+str* v6_str(v6*);
 
 #endif
