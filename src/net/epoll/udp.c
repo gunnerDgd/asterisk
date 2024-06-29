@@ -8,26 +8,15 @@
 #include <fcntl.h>
 #include <errno.h>
 
-obj_trait udp_trait = make_trait (
-    udp_new    ,
-    udp_clone  ,
-    null_t     ,
-    udp_del    ,
-    sizeof(udp),
-    null_t
-);
-
-obj_trait *udp_t = &udp_trait;
-
-u64_t
-    udp_recv_do_poll
+static u64_t
+    do_recv_poll
         (io_res* self)                                                          {
             if (trait_of(self) != io_res_t) return fut_err; udp* udp = self->dev;
             if (trait_of(udp)  != udp_t)    return fut_err;
-            if (io_poll_hang(&udp->poll))  return fut_err;
-            if (io_poll_err (&udp->poll))  return fut_err;
+            if (io_poll_hang(&udp->poll))   return fut_err;
+            if (io_poll_err (&udp->poll))   return fut_err;
 
-            if (!io_poll_in (&udp->poll)) io_sched_run(udp->sched);
+            if (!io_poll_in (&udp->poll)) io_run_flush(udp->run);
             if (!io_poll_in (&udp->poll)) return fut_pend;
             i64_t ret = recv                             (
                 udp ->udp,
@@ -41,16 +30,24 @@ u64_t
             return fut_ready;
 }
 
-u64_t
-    udp_recv_do_ret
+static u64_t
+    do_recv_ret
         (io_res* self)                                                          {
             if (trait_of(self) != io_res_t) return fut_err; udp* udp = self->dev;
             if (trait_of(udp)  != udp_t)    return fut_err;
             return self->ret;
 }
 
-i64_t
-    udp_recv_from_do_poll
+static fut_ops
+    do_recv = make_fut_ops (
+        do_recv_poll,
+        do_recv_ret
+);
+
+
+
+static i64_t
+    do_recv_from_poll
         (io_res* self)                                                          {
             if (trait_of(self) != io_res_t) return fut_err; udp *udp = self->dev;
             if (trait_of(udp)  != udp_t)    return fut_err; end *end = self->arg;
@@ -58,7 +55,7 @@ i64_t
             if (io_poll_hang(&udp->poll))  return fut_err;
             if (io_poll_err (&udp->poll))  return fut_err;
 
-            if (!io_poll_in (&udp->poll)) io_sched_run(udp->sched);
+            if (!io_poll_in (&udp->poll)) io_run_flush(udp->run);
             if (!io_poll_in (&udp->poll)) return fut_pend;
             i64_t ret = recvfrom                         (
                 udp->udp ,
@@ -74,16 +71,23 @@ i64_t
             return fut_ready;
 }
 
-u64_t
-    udp_recv_from_do_ret
+static u64_t
+    do_recv_from_ret
         (io_res* self)                                                          {
             if (trait_of(self) != io_res_t) return fut_err; udp* udp = self->dev;
             if (trait_of(udp)  != udp_t)    return fut_err;
             return self->ret;
 }
 
-u64_t
-    udp_send_do_poll
+static fut_ops
+    do_recv_from = make_fut_ops (
+        do_recv_from_poll,
+        do_recv_from_ret
+);
+
+
+static u64_t
+    do_send_poll
         (io_res* self)                                                          {
             if (trait_of(self) != io_res_t) return fut_err; udp *udp = self->dev;
             if (trait_of(udp)  != udp_t)    return fut_err;
@@ -101,16 +105,23 @@ u64_t
             return fut_pend;
 }
 
-u64_t
-    udp_send_do_ret
+static u64_t
+    do_send_ret
         (io_res* self)                                                          {
             if (trait_of(self) != io_res_t) return fut_err; udp* udp = self->dev;
             if (trait_of(udp)  != udp_t)    return fut_err;
             return self->ret;
 }
 
-i64_t
-    udp_send_to_do_poll
+ static fut_ops
+    do_send = make_fut_ops (
+        do_send_poll,
+        do_send_ret
+);
+
+
+static i64_t
+    do_send_to_poll
         (io_res* self)                                                          {
             if (trait_of(self) != io_res_t) return fut_err; udp *udp = self->dev;
             if (trait_of(udp)  != udp_t)    return fut_err; end *end = self->arg;
@@ -129,68 +140,83 @@ i64_t
             return fut_pend;
 }
 
-u64_t
-    udp_send_to_do_ret
+static u64_t
+    do_send_to_ret
         (io_res* self)                                                          {
             if (trait_of(self) != io_res_t) return fut_err; udp* udp = self->dev;
             if (trait_of(udp)  != udp_t)    return fut_err;
             return self->ret;
 }
 
-fut_ops udp_recv_from_do = make_fut_ops (udp_recv_from_do_poll, udp_recv_from_do_ret);
-fut_ops udp_recv_do      = make_fut_ops (udp_recv_do_poll     , udp_recv_do_ret)     ;
-fut_ops udp_send_to_do   = make_fut_ops (udp_send_to_do_poll  , udp_send_to_do_ret)  ;
-fut_ops udp_send_do      = make_fut_ops (udp_send_do_poll     , udp_send_do_ret)     ;
 
-bool_t 
-    udp_new
-        (udp* self, u32_t count, va_list arg)                                       {
-            io_sched  *sched = null_t; if (count > 0) sched = va_arg(arg, io_sched*);
-            obj_trait *af    = null_t; if (count > 1) af    = va_arg(arg, void*)    ;
-            if (trait_of(sched) != io_sched_t) sched = this_io_sched();
-            if (trait_of(sched) != io_sched_t) return false_t;
-            if (!af)                                         {
-                self->sched = ref (sched);
-                return true_t;
-            }
 
-            self->sched = ref (sched);
+static fut_ops
+    do_send_to = make_fut_ops (
+        do_send_to_poll,
+        do_send_to_ret
+);
+
+
+static bool_t
+    do_new
+        (udp* self, u32_t count, va_list arg)                               {
+            io_run    *run = null_t; if (count > 0) run = va_arg(arg, any_t);
+            obj_trait *af  = null_t; if (count > 1) af  = va_arg(arg, any_t);
+            if (trait_of(run) != io_run_t) run = this_io_run();
+            if (trait_of(run) != io_run_t) return false_t;
+            self->run = ref (run);
+
+            if (!af) return true_t;
             if (!udp_open(self, af)) {
-                del    (sched);
+                del      (run);
                 return false_t;
             }
 
             return true_t;
 }
 
-bool_t 
-    udp_clone
+static bool_t
+    do_clone
         (udp* self, udp* clone) {
             return false_t;
 }
 
-void   
-    udp_del
-        (udp* self)               {
-            udp_close(self)       ;
-            del      (self->sched);
+static void
+    do_del
+        (udp* self)             {
+            udp_close(self)     ;
+            del      (self->run);
 }
+
+ static obj_trait
+    do_obj = make_trait (
+        do_new     ,
+        do_clone   ,
+        null_t     ,
+        do_del     ,
+        sizeof(udp),
+        null_t
+ );
+
+ obj_trait *udp_t = &do_obj;
 
 bool_t
     udp_open
-        (udp* self, obj_trait* par_af)                              {
-            if (trait_of(self) != udp_t) return false_t; int af = -1;
-            if (par_af == v4_t) af = AF_INET ;
-            if (par_af == v6_t) af = AF_INET6;
-            if (af == -1) return false_t;
-            if (self->udp) return true_t ;
+        (udp* self, obj_trait* af)                     {
+            if (trait_of(self) != udp_t) return false_t;
+            int soc = SOCK_DGRAM | SOCK_NONBLOCK;
+            int pro = IPPROTO_UDP;
+            int dom = -1;
 
-            self->udp = socket(af, SOCK_DGRAM | SOCK_NONBLOCK, IPPROTO_UDP);
-            if (self->udp <= 0)                                                  goto open_err;
-            if (!make_at(&self->poll, io_poll) from (2, self->sched, self->udp)) goto open_err;
+            if (af == v6_t) dom = AF_INET6;
+            if (af == v4_t) dom = AF_INET ;
+            if (dom == -1)  return false_t;
+            if (self->udp)  return true_t ;
+
+            self->udp = socket(dom, soc, pro);
+            if (!make_at(&self->poll, io_poll) from (2, self->run, self->udp)) goto err;
             return true_t;
-    open_err:
-            close(self->udp);
+    err:    close(self->udp);
             self->udp    = 0;
             return false_t;
 }
@@ -224,7 +250,7 @@ fut*
             if (!buf)                               return null_t;
 
             io_res *res = make (io_res) from (3, self, buf, len);
-            fut    *ret = make (fut)    from (2, &udp_send_do, res);
+            fut    *ret = make (fut)    from (2, &do_send, res);
             if (trait_of(res) != io_res_t) return null_t;
             if (trait_of(ret) != fut_t)    return null_t;
             fut_poll(ret);
@@ -240,8 +266,8 @@ fut*
             if (!len)                               return null_t;
             if (!buf)				                return null_t;
 
-            io_res *res = make (io_res) from (5, self, buf, len, end) ;
-            fut    *ret = make (fut)    from (2, &udp_send_to_do, res);
+            io_res *res = make (io_res) from (5, self, buf, len, end);
+            fut    *ret = make (fut)    from (2, &do_send_to, res);
             if (trait_of(res) != io_res_t) return null_t;
             if (trait_of(ret) != fut_t)    return null_t;
             fut_poll(ret);
@@ -257,8 +283,8 @@ fut*
             if (!len)                               return null_t;
             if (!buf)                               return null_t;
 
-            io_res *res = make (io_res) from (3, self, buf, len)   ;
-            fut    *ret = make (fut)    from (2, &udp_recv_do, res);
+            io_res *res = make (io_res) from (3, self, buf, len);
+            fut    *ret = make (fut)    from (2, &do_recv, res) ;
             if (trait_of(res) != io_res_t) return null_t;
             if (trait_of(ret) != fut_t)    return null_t;
             del     (res);
@@ -273,8 +299,8 @@ fut*
             if (!len)                               return null_t;
             if (!buf)                               return null_t;
 
-            io_res *res = make (io_res) from (4, self, buf, len, end)   ;
-            fut    *ret = make (fut)    from (2, &udp_recv_from_do, res);
+            io_res *res = make (io_res) from (4, self, buf, len, end);
+            fut    *ret = make (fut)    from (2, &do_recv_from, res);
             if (trait_of(res) != io_res_t) return null_t;
             if (trait_of(ret) != fut_t)    return null_t;
             del     (res);
