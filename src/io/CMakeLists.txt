@@ -6,13 +6,13 @@ if    (UNIX AND NOT APPLE)
         epoll/io_res.h
         epoll/io_res.c
 
-        epoll/io_sched.h
-        epoll/io_sched.c
+        epoll/io_run.h
+        epoll/io_run.c
 
         epoll/vma.h
         epoll/vma.c
 
-        io_sched.h
+            io_run.h
         io_poll.h
         io_res.h
         vma.h
@@ -23,7 +23,7 @@ if    (UNIX AND NOT APPLE)
 
     add_library (asterisk-io-include STATIC
         ../../include/io.h
-        ../../include/io/io_sched.h
+        ../../include/io/io_run.h
         ../../include/io/vma.h
     )
 
@@ -42,7 +42,7 @@ if   (WIN32)
         iocp/vma.h
         iocp/vma.c
 
-        io_sched.h
+            io_run.h
         io_poll.h
         io_res.h
 
@@ -52,7 +52,7 @@ if   (WIN32)
 
     add_library (asterisk-io-include STATIC
         ../../include/io.h
-        ../../include/io/io_sched.h
+            ../../include/io/io_run.h
         ../../include/io/vma.h
     )
 
