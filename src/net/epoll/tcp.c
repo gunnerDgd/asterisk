@@ -8,24 +8,13 @@
 #include <errno.h>
 #include <stdio.h>
 
-obj_trait tcp_trait	= make_trait (
-    tcp_new    ,
-    tcp_clone  ,
-    null_t     ,
-    tcp_del    ,
-    sizeof(tcp),
-    null_t
-);
-
-obj_trait* tcp_t = &tcp_trait;
-
-u64_t
-    tcp_conn_do_poll
+static u64_t
+    do_conn_poll
         (io_res* self)                                                    {
             if (trait_of(self) != io_res_t) goto err; tcp* tcp = self->dev;
             if (trait_of(tcp)  != tcp_t)    goto err;
 
-            if (!io_poll_out(&tcp->poll)) io_sched_run (tcp->sched);
+            if (!io_poll_out(&tcp->poll)) io_run_flush (tcp->run);
             if (!io_poll_out(&tcp->poll)) goto pend;
             if (io_poll_hang(&tcp->poll)) goto err;
             if (io_poll_err (&tcp->poll)) goto err;
@@ -38,8 +27,8 @@ u64_t
             return fut_err;
 }
 
-void*
-    tcp_conn_do_ret
+static void*
+    do_conn_ret
         (io_res* par)                                                        {
             if (trait_of(par) != io_res_t) return null_t; tcp* tcp = par->dev;
             if (trait_of(tcp) != tcp_t)    return null_t;
@@ -47,15 +36,22 @@ void*
             return tcp;
 }
 
-u64_t
-    tcp_recv_do_poll
+static fut_ops
+    do_conn = make_fut_ops (
+        do_conn_poll,
+        do_conn_ret
+);
+
+
+static u64_t
+    do_recv_poll
         (io_res* par)                                                         {
             if (trait_of(par) != io_res_t) return fut_err; tcp* tcp = par->dev;
             if (trait_of(tcp) != tcp_t)    return fut_err;
             if (io_poll_hang(&tcp->poll))  return fut_err;
             if (io_poll_err (&tcp->poll))  return fut_err;
 
-            if (!io_poll_in(&tcp->poll)) io_sched_run(tcp->sched);
+            if (!io_poll_in(&tcp->poll)) io_run_flush(tcp->run);
             if (!io_poll_in(&tcp->poll)) return fut_pend;
             i64_t ret = recv                            (
                 tcp->tcp,
@@ -69,16 +65,23 @@ u64_t
             return fut_ready;
 }
 
-u64_t
-    tcp_recv_do_ret
+static u64_t
+    do_recv_ret
         (io_res* par)                                                   {
             if (trait_of(par) != io_res_t) return 0; tcp* tcp = par->dev;
             if (trait_of(tcp) != tcp_t)    return 0;
             return par->ret;
 }
 
-i64_t
-    tcp_send_do_poll
+static fut_ops
+    do_recv = make_fut_ops (
+        do_recv_poll,
+        do_recv_ret
+);
+
+
+static i64_t
+    do_send_poll
         (io_res* par)                                                         {
             if (trait_of(par) != io_res_t) return fut_err; tcp* tcp = par->dev;
             if (trait_of(tcp) != tcp_t)    return fut_err;
@@ -98,64 +101,79 @@ i64_t
             return fut_pend;
 }
 
-u64_t
-    tcp_send_do_ret
+static u64_t
+    do_send_ret
         (io_res* par)                                                   {
             if (trait_of(par) != io_res_t) return 0; tcp* tcp = par->dev;
             if (trait_of(tcp) != tcp_t)    return 0;
             return par->ret;
 }
 
-fut_ops tcp_conn_do = make_fut_ops (tcp_conn_do_poll, tcp_conn_do_ret);
-fut_ops tcp_send_do = make_fut_ops (tcp_send_do_poll, tcp_send_do_ret);
-fut_ops tcp_recv_do = make_fut_ops (tcp_recv_do_poll, tcp_recv_do_ret);
 
-bool_t 
-	tcp_new
-		(tcp* self, u32_t count, va_list arg)		     	                        {
-			io_sched  *sched = null_t; if (count > 0) sched = va_arg(arg, io_sched*);
-			obj_trait *af    = null_t; if (count > 1) af    = va_arg(arg, void*)    ;
-			if (trait_of(sched) != io_sched_t) sched = this_io_sched();
-			if (trait_of(sched) != io_sched_t) return false_t;
-			if (!af)                                         {
-                self->sched = ref (sched);
-                return true_t;
-			}
+static fut_ops
+    do_send = make_fut_ops (
+        do_send_poll,
+        do_send_ret
+);
 
-            self->sched = ref (sched);
-			if (!tcp_open(self, af)) {
-			    del    (sched);
-                return false_t;
-            }
 
+static bool_t
+	do_new
+		(tcp* self, u32_t count, va_list arg)		     	                {
+			io_run    *run = null_t; if (count > 0) run = va_arg(arg, any_t);
+			obj_trait *af  = null_t; if (count > 1) af  = va_arg(arg, any_t);
+			if (trait_of(run) != io_run_t) run = this_io_run();
+			if (trait_of(run) != io_run_t) return false_t;
+			self->run = ref (run);
+
+			if (!af)                 return true_t;
+			if (!tcp_open(self, af)) goto err;
 			return true_t;
+    err:    del (self->run);
+            return  false_t;
 }
 
-bool_t 
-	tcp_clone
+static bool_t
+	do_clone
 		(tcp* self, tcp* clone) {
 			return false_t;
 }
 
-void
-	tcp_del
-		(tcp* self)         {
-            tcp_close(self) ;
-			del(self->sched);
+static void
+	do_del
+		(tcp* self)        {
+            tcp_close(self);
+			del (self->run);
 }
+
+static obj_trait
+    do_tcp = make_trait (
+        do_new    ,
+        do_clone  ,
+        null_t     ,
+        do_del    ,
+        sizeof(tcp),
+        null_t
+);
+
+obj_trait* tcp_t = &do_tcp;
+
 
 bool_t
     tcp_open
-        (tcp* self, obj_trait* af)                                   {
-            if (trait_of(self) != tcp_t) return false_t; int res = -1;
-            if (af == v6_t) res = AF_INET6;
-            if (af == v4_t) res = AF_INET ;
-            if (res == -1)  return false_t;
+        (tcp* self, obj_trait* af)                     {
+            if (trait_of(self) != tcp_t) return false_t;
+            int soc = SOCK_STREAM | SOCK_NONBLOCK;
+            int pro = IPPROTO_TCP;
+            int dom = -1;
+
+            if (af == v6_t) dom = AF_INET6;
+            if (af == v4_t) dom = AF_INET ;
+            if (dom == -1)  return false_t;
             if (self->tcp)  return true_t ;
 
-            self->tcp = socket(res, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);
-            if (self->tcp <= 0)                                                  goto err;
-            if (!make_at(&self->poll, io_poll) from (2, self->sched, self->tcp)) goto err;
+            self->tcp = socket(dom, soc, pro);
+            if (!make_at(&self->poll, io_poll) from (2, self->run, self->tcp)) goto err;
             return true_t;
     err:    close(self->tcp);
             self->tcp    = 0;
@@ -173,8 +191,8 @@ fut*
 			io_res *res = null_t;
 			fut    *ret = null_t;
 
-            res = make (io_res) from (3, self, null_t, 0)  ;
-            ret = make (fut)    from (2, &tcp_conn_do, res);
+            res = make (io_res) from (3, self, null_t, 0);
+            ret = make (fut)    from (2, &do_conn, res);
             if (trait_of(res) != io_res_t) goto err;
             if (trait_of(ret) != fut_t)    goto err;
 
@@ -189,10 +207,10 @@ fut*
 
 void 
 	tcp_close
-		(tcp* self)                              {
-		    if   (trait_of(self) != tcp_t) return;
-            close(self->tcp)  ;
+		(tcp* self)                            {
+		    if (trait_of(self) != tcp_t) return;
             del  (&self->poll);
+            close(self->tcp)  ;
             self->tcp = 0;
 }
 
@@ -203,8 +221,8 @@ fut*
 			if (!len)				     return null_t;
 			if (!buf)				     return null_t;
 
-			io_res *res = make (io_res) from (3, self, buf, len)   ;
-			fut    *ret = make (fut)    from (2, &tcp_send_do, res);
+			io_res *res = make (io_res) from (3, self, buf, len);
+			fut    *ret = make (fut)    from (2, &do_send, res);
 			if (trait_of(res) != io_res_t) return null_t;
 			if (trait_of(ret) != fut_t)    return null_t;
             del   (res);
@@ -218,8 +236,8 @@ fut*
             if (!len)                    return null_t;
             if (!buf)                    return null_t;
 
-            io_res *res = make (io_res) from (3, self, buf, len)   ;
-            fut    *ret = make (fut)    from (2, &tcp_recv_do, res);
+            io_res *res = make (io_res) from (3, self, buf, len);
+            fut    *ret = make (fut)    from (2, &do_recv, res);
             if (trait_of(res) != io_res_t) return null_t;
             if (trait_of(ret) != fut_t)    return null_t;
             del   (res);
