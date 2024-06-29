@@ -36,49 +36,53 @@ static u64_t
             return self->ret;
 }
 
-fut_ops out_do = make_fut_ops (
-    out_do_poll,
-    out_do_ret
+static fut_ops
+    do_fut = make_fut_ops (
+        out_do_poll,
+        out_do_ret
 );
 
-obj_trait out_trait = make_trait (
-    out_new     ,
-    out_clone   ,
-    null_t     ,
-    out_del     ,
-    sizeof (out),
-    null_t
-);
 
-obj_trait *out_t = &out_trait;
 
-bool_t
-    out_new
-        (out* self, u32_t count, va_list arg)                                   {
-            io_sched *sched = null_t; if (count > 0) sched = va_arg(arg, any_t);
-            if (trait_of(sched) != io_sched_t) sched = this_io_sched();
-            if (trait_of(sched) != io_sched_t) return false_t;
+static bool_t
+    do_new
+        (out* self, u32_t count, va_list arg)                            {
+            io_run *run = null_t; if (count > 0) run = va_arg(arg, any_t);
+            if (trait_of(run) != io_run_t) run = this_io_run();
+            if (trait_of(run) != io_run_t) return false_t;
 
-            self->sched = ref (sched);
-            self->out    = -1;
+            self->run = ref (run);
+            self->out = -1;
             return true_t;
 }
 
-bool_t
-    out_clone
+static bool_t
+    do_clone
         (out* self, out* clone) {
             return false_t;
 }
 
-void
-    out_del
-        (out* self)             {
-            close (self->out)   ;
-            del   (self->sched);
+static void
+    do_del
+        (out* self)          {
+            close (self->out);
+            del   (self->run);
 }
 
+static obj_trait
+    do_out = make_trait (
+        do_new     ,
+        do_clone   ,
+        null_t     ,
+        do_del     ,
+        sizeof (out),
+        null_t
+);
+
+obj_trait *out_t = &do_out;
+
 bool_t
-    out_create_cstr
+    out_new
         (out* self, const char* name)                  {
             if (trait_of(self) != out_t) return false_t;
             if (self->out != -1)         return false_t;
@@ -90,7 +94,7 @@ bool_t
 }
 
 bool_t
-    out_open_cstr
+    out_open
         (out* self, const char* name)                  {
             if (trait_of(self) != out_t) return false_t;
             if (self->out != -1)         return false_t;
@@ -99,22 +103,6 @@ bool_t
 
             if (self->out <= 0) return false_t;
             return true_t;
-}
-
-bool_t
-    out_create
-        (out* self, str* name)                          {
-            if (trait_of(name) != str_t) return false_t;
-            if (trait_of(self) != out_t)  return false_t;
-            return out_create_cstr(self, str_ptr(name));
-}
-
-bool_t
-    out_open
-        (out* self, str* name)                          {
-            if (trait_of(name) != str_t) return false_t;
-            if (trait_of(self) != out_t)  return false_t;
-            return out_open_cstr(self, str_ptr(name));
 }
 
 void
@@ -129,26 +117,17 @@ fut*
     out_write
         (out* self, any_t buf, u64_t len)             {
             if (trait_of(self) != out_t) return null_t;
-            if (!buf)                   return null_t;
-            if (!len)                   return null_t;
+            if (!buf)                    return null_t;
+            if (!len)                    return null_t;
             io_res *res = null_t;
             fut    *ret = null_t;
 
-            res = make (io_res) from (
-                3   ,
-                self,
-                buf ,
-                len
-            );
+            res = make (io_res) from (3, self, buf, len);
+            ret = make (fut)    from (2, &do_fut, res);
 
             if (trait_of(res) != io_res_t) goto err;
-            ret = make (fut) from                  (
-                2      ,
-                &out_do,
-                res
-            );
-
-            if (trait_of(ret) != fut_t) goto err;
+            if (trait_of(ret) != fut_t)    goto err;
+            del (res);
             return ret;
     err:    del (res);
             del (ret);
