@@ -1,5 +1,5 @@
-#ifndef __FS_H__
-#define __FS_H__
+#ifndef FS_H
+#define FS_H
 
 #include "fs/file.h"
 #include "fs/out.h"
@@ -9,5 +9,9 @@ extern obj_trait *fs_t;
 struct fs { u8_t fs[1 KB]; };
 
 extern struct fs fs;
+
+file* new_file(const char*);
+out*  new_out (const char*);
+in*   new_in  (const char*);
 
 #endif
