@@ -1,5 +1,5 @@
-#ifndef __NET_V6_H__
-#define __NET_V6_H__
+#ifndef NET_V6_H
+#define NET_V6_H
 
 #ifdef PRESET_WIN32
 #include "iocp/v6.h"
