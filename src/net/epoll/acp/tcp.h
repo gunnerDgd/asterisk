@@ -1,10 +1,10 @@
-#ifndef __NET_EPOLL_ACPT_TCP_H__
-#define __NET_EPOLL_ACPT_TCP_H__
+#ifndef NET_EPOLL_ACP_TCP_H
+#define NET_EPOLL_ACP_TCP_H
 
 #include <core.h>
 
 struct io_res;
-struct acpt;
+struct acp;
 struct tcp;
 
 u64_t
@@ -20,14 +20,14 @@ extern fut_ops
 
 bool_t
     do_tcp_open
-        (struct acpt*);
+        (struct acp*);
 
 void
     do_tcp_close
-        (struct acpt*);
+        (struct acp*);
 
 fut*
     do_tcp_fut
-        (struct acpt*);
+        (struct acp*);
 
 #endif
