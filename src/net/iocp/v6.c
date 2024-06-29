@@ -1,58 +1,43 @@
 #include "v6.h"
 
-obj_trait v6_trait = make_trait (
-    v6_new  ,  
-    v6_clone  ,
-    null_t    ,
-    v6_del    ,
-    sizeof(v6),
-    null_t
-);
-
-obj_trait* v6_t = &v6_trait;
-
-v6*
-    make_v6
-        (str* par)                                   {
-            if (trait_of(par) != str_t) return null_t;
-            return make_v6_cstr(str_ptr(par));
-}
-
-v6*
-    make_v6_cstr
-        (const char* par)                                                       {
-            if (!par)                  return null_t; v6* ret = make(v6) from(0);
-            if (trait_of(ret) != v6_t) return null_t;
-            inet_pton(AF_INET6, par, &ret->v6);
-            return ret;
-}
-
-bool_t
-    v6_new
-        (v6* par_v4, u32_t par_count, va_list par) {
+static bool_t
+    do_new
+        (v6* self, u32_t count, va_list arg) {
             return true_t;
 }
 
-bool_t
-    v6_clone
-        (v6* par, v6* par_clone)   {
-            par->v6 = par_clone->v6;
+static bool_t
+    do_clone
+        (v6* self, v6* clone)   {
+            self->v6 = clone->v6;
             return true_t;
 }
 
-void
-    v6_del
+static void
+    do_del
         (v6* par) {
             return;
 }
 
+static obj_trait 
+    do_obj = make_trait (
+        do_new    ,
+        do_clone  ,
+        null_t    ,
+        do_del    ,
+        sizeof(v6),
+        null_t
+);
+
+obj_trait* v6_t = &do_obj;
+
 str*
-    v6_as_str
-        (v6* par)                                                                   {
-            if (trait_of (par) != v6_t)  return null_t; str *ret = make(str) from(0);
-            if (trait_of (ret) != str_t) return null_t;
+    v6_str
+        (v6* self)                                                                     {
+            if (trait_of (self) != v6_t)  return null_t; str *ret = make (str) from (0);
+            if (trait_of (ret)  != str_t) return null_t;
             str_prep_back(ret, 64);
 
-            inet_ntop(AF_INET6, &par->v6, str_ptr(ret), 64);
+            inet_ntop(AF_INET6, &self->v6, str_ptr(ret), 64);
             return ret;
 }

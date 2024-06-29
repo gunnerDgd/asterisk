@@ -1,10 +1,8 @@
-#ifndef __NET_IOCP_V4_H__
-#define __NET_IOCP_V4_H__
+#ifndef NET_IOCP_V4_H
+#define NET_IOCP_V4_H
 
-#include <core.h>
+#include "../../io.h"
 #include <collections.h>
-
-#include <WS2tcpip.h>
 
 extern obj_trait* v4_t ;
 typedef struct    v4   {
@@ -12,14 +10,7 @@ typedef struct    v4   {
     struct in_addr v4  ;
 }   v4;
 
-v4*    make_v4_cstr(const char*);
-v4*    make_v4_int (u32_t)      ;
-v4*    make_v4     (str*)       ;
-
-bool_t v4_new      (v4*, u32_t, va_list);
-bool_t v4_clone    (v4*, v4*)           ;
-void   v4_del      (v4*)                ;
-u32_t  v4_as_int   (v4*)                ;
-str*   v4_as_str   (v4*)                ;
+u32_t  v4_int(v4*);
+str*   v4_str(v4*);
 
 #endif
