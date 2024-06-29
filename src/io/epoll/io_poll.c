@@ -1,98 +1,107 @@
 #include "io_poll.h"
-#include "io_sched.h"
+#include "io_run.h"
 
-obj_trait io_poll_trait = make_trait (
-    io_poll_new    ,
-    io_poll_clone  ,
-    null_t         ,
-    io_poll_del    ,
-    sizeof(io_poll),
-    null_t
-);
+static bool_t
+    do_new
+        (io_poll* self, u32_t count, va_list arg)                   {
+            io_run* run = 0; if (count > 0) run = va_arg(arg, any_t);
+            int     dev = 0; if (count > 1) dev = va_arg(arg, i32_t);
 
-obj_trait* io_poll_t = &io_poll_trait;
+            if (trait_of(run) != io_run_t) return false_t;
+            if (dev <= 0)                  return false_t;
 
-bool_t
-    io_poll_new
-        (io_poll* par_dev, u32_t par_count, va_list par)                       {
-            io_sched* sched = 0; if (par_count > 0) sched = va_arg(par, void*);
-            int       dev   = 0; if (par_count > 1) dev   = va_arg(par, int)  ;
-
-            if (trait_of(sched) != io_sched_t) return false_t;
-            if (dev <= 0)                      return false_t;
-
-            struct epoll_event* event = &par_dev->mask;
+            struct epoll_event* event = &self->mask;
             event->events   = EPOLLIN | EPOLLERR;
-            event->data.ptr = par_dev           ;
+            event->data.ptr = self              ;
 
-            if (epoll_ctl(sched->hnd, EPOLL_CTL_ADD, dev, event)) return false_t;
-            par_dev->poll.events = 0ull                  ;
-            par_dev->sched       = (io_sched*) ref(sched);
-            par_dev->dev         = dev                   ;
+            if (epoll_ctl(run->run, EPOLL_CTL_ADD, dev, event)) return false_t;
+            self->poll.events = 0ull              ;
+            self->run         = (io_run*) ref(run);
+            self->dev         = dev               ;
             return true_t;
 }
 
-bool_t
-    io_poll_clone
-        (io_poll* par, io_poll* par_clone) {
+static bool_t
+    do_clone
+        (io_poll* self, io_poll* clone) {
             return false_t;
 }
 
-void
-    io_poll_del
-        (io_poll* par)                                             {
-            epoll_ctl(par->sched->hnd, EPOLL_CTL_DEL, par->dev, 0);
-            del      (par->sched);
+static void
+    do_del
+        (io_poll* self)            {
+            io_run *run = self->run;
+            epoll_ctl              (
+                run->run     ,
+                EPOLL_CTL_DEL,
+                self->dev    ,
+                0
+            );
+
+            del (run);
 }
+
+
+static obj_trait
+    do_poll = make_trait (
+        do_new         ,
+        do_clone       ,
+        null_t         ,
+        do_del         ,
+        sizeof(io_poll),
+        null_t
+);
+
+obj_trait* io_poll_t = &do_poll;
 
 void
     io_poll_mask_err
-        (io_poll* par, bool_t par_mask)                {
-            if (trait_of(par) != io_poll_t)      return;
-            if (par_mask) par->mask.events |=  EPOLLERR;
-            else          par->mask.events &= ~EPOLLERR;
-            epoll_ctl                                  (
-                par->sched->hnd,
-                EPOLL_CTL_MOD  ,
-                par->dev       ,
-                &par->mask
+        (io_poll* self, bool_t mask)                {
+            if (trait_of(self) != io_poll_t)  return;
+            if (mask) self->mask.events |=  EPOLLERR;
+            else      self->mask.events &= ~EPOLLERR;
+            epoll_ctl                               (
+                self->run->run,
+                EPOLL_CTL_MOD,
+                self->dev     ,
+                &self->mask
             );
 }
 
 void
     io_poll_mask_out
-        (io_poll* par, bool_t par_mask)                {
-            if (trait_of(par) != io_poll_t)      return;
-            if (par_mask) par->mask.events |=  EPOLLOUT;
-            else          par->mask.events &= ~EPOLLOUT;
-            epoll_ctl                                  (
-                par->sched->hnd,
-                EPOLL_CTL_MOD  ,
-                par->dev       ,
-                &par->mask
+        (io_poll* self, bool_t mask)                {
+            if (trait_of(self) != io_poll_t)  return;
+            if (mask) self->mask.events |=  EPOLLOUT;
+            else      self->mask.events &= ~EPOLLOUT;
+            epoll_ctl                               (
+                self->run->run,
+                EPOLL_CTL_MOD ,
+                self->dev     ,
+                &self->mask
             );
 }
 
 void
     io_poll_mask_in
-        (io_poll* par, bool_t par_mask)               {
-            if (trait_of(par) != io_poll_t)     return;
-            if (par_mask) par->mask.events |=  EPOLLIN;
-            else          par->mask.events &= ~EPOLLIN;
-            epoll_ctl                                 (
-                par->sched->hnd,
-                EPOLL_CTL_MOD  ,
-                par->dev       ,
-                &par->mask
+        (io_poll* self, bool_t mask)               {
+            if (trait_of(self) != io_poll_t) return;
+            if (mask) self->mask.events |=  EPOLLIN;
+            else      self->mask.events &= ~EPOLLIN;
+            epoll_ctl                              (
+                self->run->run,
+                EPOLL_CTL_MOD ,
+                self->dev     ,
+                &self->mask
             );
 }
 
 bool_t
     io_poll_hang
-        (io_poll* par)                                    {
-            if (trait_of(par) != io_poll_t) return false_t;
-            if (par->poll.events  & EPOLLHUP)             {
-                par->poll.events ^= EPOLLHUP;
+        (io_poll* self)                                    {
+            if (trait_of(self) != io_poll_t) return false_t;
+            if (self->poll.events  & EPOLLHUP)             {
+                self->poll.events ^= EPOLLHUP;
                 return true_t;
             }
             return false_t;
@@ -100,10 +109,10 @@ bool_t
 
 bool_t
     io_poll_in
-        (io_poll* par)                                    {
-            if (trait_of(par) != io_poll_t) return false_t;
-            if (par->poll.events  & EPOLLIN)              {
-                par->poll.events ^= EPOLLIN;
+        (io_poll* self)                                    {
+            if (trait_of(self) != io_poll_t) return false_t;
+            if (self->poll.events  & EPOLLIN)              {
+                self->poll.events ^= EPOLLIN;
                 return true_t;
             }
             return false_t;
@@ -111,10 +120,10 @@ bool_t
 
 bool_t
     io_poll_out
-        (io_poll* par)                                    {
-            if (trait_of(par) != io_poll_t) return false_t;
-            if (par->poll.events  & EPOLLOUT)             {
-                par->poll.events ^= EPOLLOUT;
+        (io_poll* self)                                    {
+            if (trait_of(self) != io_poll_t) return false_t;
+            if (self->poll.events  & EPOLLOUT)             {
+                self->poll.events ^= EPOLLOUT;
                 return true_t;
             }
             return false_t;
@@ -122,10 +131,10 @@ bool_t
 
 bool_t
     io_poll_err
-        (io_poll* par)                                    {
-            if (trait_of(par) != io_poll_t) return false_t;
-            if (par->poll.events  & EPOLLERR)             {
-                par->poll.events ^= EPOLLERR;
+        (io_poll* self)                                    {
+            if (trait_of(self) != io_poll_t) return false_t;
+            if (self->poll.events  & EPOLLERR)             {
+                self->poll.events ^= EPOLLERR;
                 return true_t;
             }
             return false_t;
