@@ -1,5 +1,5 @@
-#ifndef __IO_VMA_H__
-#define __IO_VMA_H__
+#ifndef IO_VMA_H
+#define IO_VMA_H
 
 #include <core.h>
 

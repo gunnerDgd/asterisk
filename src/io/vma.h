@@ -1,5 +1,5 @@
-#ifndef __CORE_VMA_H__
-#define __CORE_VMA_H__
+#ifndef VMA_H
+#define VMA_H
 
 #ifdef PRESET_LINUX
 #include "epoll/vma.h"
