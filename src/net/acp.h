@@ -1,10 +1,10 @@
-#ifndef __NET_ACPT_H__
-#define __NET_ACPT_H__
+#ifndef NET_ACP_H
+#define NET_ACP_H
 
 #ifdef PRESET_WIN32
 #include "iocp/acpt.h"
 #elif  PRESET_LINUX
-#include "epoll/acpt.h"
+#include "epoll/acp.h"
 #endif
 
 #endif
