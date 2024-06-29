@@ -1,57 +1,58 @@
 #include "udp.h"
-#include "../../io.h"
 
-#include "net.h"
 #include "v4.h"
 #include "v6.h"
 
-obj_trait udp_trait = make_trait (
-    udp_new    ,
-    udp_clone  ,
-    null_t     ,
-    udp_del    ,
-    sizeof(udp),
-    null_t
-);
 
-obj_trait *udp_t = &udp_trait;
+static bool_t 
+    do_new
+        (udp* self, u32_t count, va_list arg)                            {
+            io_run* run = null_t; if (count > 0) run = va_arg(arg, any_t);
+            if (trait_of(run) != io_run_t) run = this_io_run();
+            if (trait_of(run) != io_run_t) return false_t;
 
-bool_t 
-    udp_new
-        (udp* par_udp, u32_t par_count, va_list par)                                   {
-            io_sched* sched = null_t; if (par_count > 0) sched = va_arg(par, io_sched*);
-            if (trait_of(sched) != io_sched_t) sched = this_io_sched();
-            if (trait_of(sched) != io_sched_t) return false_t;
-            par_udp->sched = ref(sched)    ;
-            par_udp->ioc   = null_t        ;
-            par_udp->udp   = INVALID_SOCKET;
+            self->udp = INVALID_SOCKET;
+            self->run = ref(run)      ;
+            self->ioc = null_t        ;
             return true_t;
 }
 
-bool_t 
-    udp_clone
-        (udp* par, udp* par_clone) {
+static bool_t 
+    do_clone
+        (udp* self, udp* clone) {
             return false_t;
 }
 
-void   
-    udp_del
-        (udp* par)               {
-            del      (par->sched);
-            udp_close(par)       ;
+static void   
+    do_del
+        (udp* self)        {
+            del (self->run);
+            udp_close(self);
             return;
 }
 
+static obj_trait 
+    do_obj = make_trait (
+        do_new     ,
+        do_clone   ,
+        null_t     ,
+        do_del     ,
+        sizeof(udp),
+        null_t
+);
+
+obj_trait* udp_t = &do_obj;
+
 bool_t 
     udp_open
-        (udp* par, obj_trait* par_af)                                  {
-            if (trait_of(par) != udp_t) return false_t; int af = -1;
-            if (par_af == v4_t) af = AF_INET  ;
-            if (par_af == v6_t) af = AF_INET6 ;
-            if (af == -1)       return false_t;
+        (udp* self, obj_trait* arg)                                 {
+            if (trait_of(self) != udp_t) return false_t; int af = -1;
+            if (arg == v4_t) af = AF_INET  ;
+            if (arg == v6_t) af = AF_INET6 ;
+            if (af == -1)    return false_t;
 
-            if (par->udp != INVALID_SOCKET) return true_t;
-            par->udp = WSASocket                         (
+            if (self->udp != INVALID_SOCKET) return true_t;
+            self->udp = WSASocket                         (
                 af                ,
                 SOCK_DGRAM        ,
                 IPPROTO_UDP       ,
@@ -60,57 +61,57 @@ bool_t
                 WSA_FLAG_OVERLAPPED
             );
 
-            if (par->udp == INVALID_SOCKET) return false_t;
-            par->ioc = CreateIoCompletionPort             (
-                par->udp       ,
-                par->sched->hnd,
-                par->sched     ,
+            if (self->udp == INVALID_SOCKET) return false_t;
+            self->ioc = CreateIoCompletionPort             (
+                self->udp     ,
+                self->run->hnd,
+                self->run     ,
                 0
             );
 
-            if (!par->ioc)               {
-                closesocket(par->udp)    ;
-                par->udp = INVALID_SOCKET;
+            if (!self->ioc)               {
+                closesocket(self->udp)    ;
+                self->udp = INVALID_SOCKET;
                 return false_t;
             }
 }
 
 bool_t 
     udp_conn
-        (udp* par, end* par_end)                          {
-            if (trait_of(par_end) != end_t) return false_t;
-            if (trait_of(par)     != udp_t) return false_t;
+        (udp* self, end* end)                          {
+            if (trait_of(self) != udp_t) return false_t;
+            if (trait_of(end)  != end_t) return false_t;
 
-            if (!udp_open(par, end_af(par_end)))             return false_t;
-            if (bind(par->udp, &par_end->all, par_end->len)) return false_t;
+            if (!udp_open(self, end_af(end)))         return false_t;
+            if (bind(self->udp, &end->all, end->len)) return false_t;
             return true_t;
 }
 
 void   
     udp_close
-        (udp* par)                            {
-            if (trait_of(par) != udp_t) return;
-            closesocket(par->udp)    ;
-            par->udp = INVALID_SOCKET;
+        (udp* self)                            {
+            if (trait_of(self) != udp_t) return;
+            closesocket (self->udp)   ;
+            self->udp = INVALID_SOCKET;
 }
 
 fut*
     udp_send
-        (udp* par, u8_t* par_buf, u64_t par_len)     {
-            if (trait_of(par) != udp_t) return null_t;
-            if (!par_buf)               return null_t;
-            if (!par_len)               return null_t;
+        (udp* self, u8_t* buf, u64_t len)             {
+            if (trait_of(self) != udp_t) return null_t;
+            if (!buf)                    return null_t;
+            if (!len)                    return null_t;
             
 
-            io_res *ret = make (io_res) from (1, par->sched); if (trait_of(ret) != io_res_t) return 0;
-			WSABUF  buf = { .buf = par_buf, .len = par_len };
-			i32_t   res = WSASend                           (
-                par->udp ,
-                &buf     ,
-                1        ,
-                0        ,
-                par->flag,
-                &ret->res,
+            io_res *ret = make (io_res) from (1, self->run); if (trait_of(ret) != io_res_t) return 0;
+			WSABUF  snd = { .buf = buf, .len = len };
+			i32_t   res = WSASend                   (
+                self->udp ,
+                &snd      ,
+                1         ,
+                0         ,
+                self->flag,
+                &ret->res ,
                 0
             );
 
@@ -128,23 +129,23 @@ fut*
 
 fut*
     udp_send_to
-        (udp* par, u8_t* par_buf, u64_t par_len, end* par_end) {
-            if (trait_of(par_end) != end_t) return 0;
-            if (trait_of(par)     != udp_t) return 0;
-            if (!par_buf)                   return 0;
-            if (!par_len)                   return 0;
+        (udp* self, u8_t* buf, u64_t len, end* end)   {
+            if (trait_of(self) != udp_t) return null_t;
+            if (trait_of(end)  != end_t) return null_t;
+            if (!buf)                    return null_t;
+            if (!len)                    return null_t;
 
-            io_res *ret = make (io_res) from (1, par->sched); if (trait_of(ret) != io_res_t) return 0; 
-			WSABUF  buf = { .buf = par_buf, .len = par_len };
-			i32_t   res = WSASendTo                         (
-                par->udp     ,
-                &buf         ,
-                1            ,
-                0            ,
-                0            ,
-                &par_end->all,
-                par_end->len ,
-                &ret->res    ,
+            io_res *ret = make (io_res) from (1, self->run); if (trait_of(ret) != io_res_t) return 0; 
+			WSABUF  snd = { .buf = buf, .len = len };
+			i32_t   res = WSASendTo                 (
+                self->udp,
+                &snd     ,
+                1        ,
+                0        ,
+                0        ,
+                &end->all,
+                end->len ,
+                &ret->res,
                 0
             );
 
@@ -162,20 +163,20 @@ fut*
 
 fut*
     udp_recv
-        (udp* par, u8_t* par_buf, u64_t par_len) {
-            if (trait_of(par) != udp_t) return 0;
-			if (!par_buf)               return 0;
-            if (!par_len)               return 0;
+        (udp* self, u8_t* buf, u64_t len)             {
+            if (trait_of(self) != udp_t) return null_t;
+			if (!buf)                    return null_t;
+            if (!len)                    return null_t;
 
-            io_res *ret = make (io_res) from (1, par->sched); if (trait_of(ret) != io_res_t) return 0;
-			WSABUF  buf = { .buf = par_buf, .len = par_len };
-			i32_t   res = WSARecv                           (
-                par->udp  ,
-                &buf      ,
-                1         ,
-                0         ,
-                &par->flag,
-                &ret->res ,
+            io_res *ret = make (io_res) from (1, self->run); if (trait_of(ret) != io_res_t) return 0;
+			WSABUF  rcv = { .buf = buf, .len = len };
+			i32_t   res = WSARecv                   (
+                self->udp  ,
+                &rcv       ,
+                1          ,
+                0          ,
+                &self->flag,
+                &ret->res  ,
                 0
             );
 
@@ -193,23 +194,23 @@ fut*
 
 fut*
     udp_recv_from
-        (udp* par, u8_t* par_buf, u64_t par_len, end* par_end) {
-            if (trait_of(par_end) != end_t) return 0;
-            if (trait_of(par)     != udp_t) return 0;
-            if (!par_buf)                   return 0;
-            if (!par_len)                   return 0;
+        (udp* self, u8_t* buf, u64_t len, end* end)   {
+            if (trait_of(self) != udp_t) return null_t;
+            if (trait_of(end)  != end_t) return null_t;
+            if (!buf)                    return null_t;
+            if (!len)                    return null_t;
 
-			io_res *ret = make (io_res) from (1, par->sched); if (trait_of(ret) != io_res_t) return 0;
-			WSABUF  buf = { .buf = par_buf, .len = par_len };
-			i32_t   res = WSARecvFrom                       (
-                par->udp     ,
-                &buf         ,
-                1            ,
-                0            ,
-                0            ,
-                &par_end->all,
-                par_end->len ,
-                &ret->res    ,
+			io_res *ret = make (io_res) from (1, self->run); if (trait_of(ret) != io_res_t) return 0;
+			WSABUF  rcv = { .buf = buf, .len = len };
+			i32_t   res = WSARecvFrom               (
+                self->udp,
+                &rcv     ,
+                1        ,
+                0        ,
+                0        ,
+                &end->all,
+                end->len ,
+                &ret->res,
                 0
             );
 

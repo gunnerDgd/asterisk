@@ -1,23 +1,19 @@
-#ifndef __NET_IOCP_TCP_H__
-#define __NET_IOCP_TCP_H__
+#ifndef NET_IOCP_TCP_H
+#define NET_IOCP_TCP_H
 
-#include <core.h>
+#include "../../io.h"
 #include "end.h"
 
 struct io_sched;
 
 extern obj_trait* tcp_t;
-typedef struct    tcp     {
-	obj				 head ;
-	struct io_sched *sched;
-	u64_t			 flag ;
-	any_t			 ioc;
-	any_t			 tcp;
+typedef struct    tcp  {
+	obj		head;
+	u64_t	flag;
+	io_run* run;
+	any_t   ioc;
+	any_t   tcp;
 }	tcp;
-
-bool_t tcp_new    (tcp*, u32_t, va_list);
-bool_t tcp_clone  (tcp*, tcp*)		    ;
-void   tcp_del    (tcp*)			    ;
 
 bool_t tcp_open   (tcp*, obj_trait*)    ;
 fut*   tcp_conn   (tcp*, end*)		    ;

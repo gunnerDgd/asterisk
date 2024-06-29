@@ -1,60 +1,50 @@
 #include "file.h"
 
-obj_trait file_trait = make_trait (
-    file_new    ,
-    file_clone  ,
-    null_t      ,
-    file_del    ,
-    sizeof(file),
-    null_t
-);
-
-obj_trait* file_t = &file_trait;
-
-bool_t
-    file_new
-        (file* self, u32_t count, va_list arg)                                     {
-            io_sched *sched = null_t; if (count > 0) sched = va_arg(arg, io_sched*);
-            if (trait_of(sched) != io_sched_t)       sched = this_io_sched();
-            if (trait_of(sched) != io_sched_t)       return false_t;
-            if (sched->hnd == INVALID_HANDLE_VALUE)  return false_t;
+static bool_t
+    do_new
+        (file* self, u32_t count, va_list arg)                            {
+            io_run *run = null_t; if (count > 0)  run = va_arg(arg, any_t);
+            if (trait_of(run) != io_run_t)        run = this_io_run();
+            if (trait_of(run) != io_run_t)        return false_t;
+            if (run->hnd == INVALID_HANDLE_VALUE) return false_t;
             
-            if (!make_at (&self->out, out) from (1, sched)) goto err;
-            if (!make_at (&self->in , in)  from (1, sched)) goto err;
-            self->sched = ref (sched);
-            self->dev   = (any_t) - 1;
+            if (!make_at (&self->out, out) from (1, run)) goto err;
+            if (!make_at (&self->in , in)  from (1, run)) goto err;
+            self->run = ref  (run);
+            self->dev = (any_t) -1;
             return true_t;
     err:    del (&self->out);
             del (&self->in) ;
             return false_t;
 }
 
-bool_t 
-    file_clone
+static bool_t 
+    do_clone
         (file* self, file* clone) {
             return false_t;
 }
 
-void   
-    file_del
-        (file* self)               {
-            CloseHandle (self->dev);
-            CloseHandle (self->ioc);
-            del(self->sched);
-            del(&self->out) ;
-            del(&self->in)  ;
+static void   
+    do_del
+        (file* self)        {
+            file_close(self);
+            del(self->run);
 }
 
-bool_t
-    file_open
-        (file* par, str* par_name)                          {
-            if (trait_of(par_name) != str_t)  return false_t;
-            if (trait_of(par)      != file_t) return false_t;
-            return file_open_cstr(par, str_ptr(par_name));
-}
+static obj_trait 
+    do_obj = make_trait (
+        do_new      ,
+        do_clone    ,
+        null_t      ,
+        do_del      ,
+        sizeof(file),
+        null_t
+);
+
+obj_trait* file_t = &do_obj;
 
 bool_t 
-    file_open_cstr
+    file_open
         (file* self, const char* name)                  {
             if (trait_of(self) != file_t) return false_t;
             if (!name)                    return false_t;
@@ -72,14 +62,14 @@ bool_t
 
             if (self->dev == INVALID_HANDLE_VALUE) goto err;
             self->ioc = CreateIoCompletionPort             (
-                self->dev       ,
-                self->sched->hnd,
-                self->sched     ,
+                self->dev     ,
+                self->run->hnd,
+                self->run     ,
                 0
             );
 
-            if (!out_open_cstr(&self->out, name))  goto err;
-            if (!in_open_cstr (&self->in , name))  goto err;
+            if (!out_open(&self->out, name))  goto err;
+            if (!in_open (&self->in , name))  goto err;
             self->out.ioc = INVALID_HANDLE_VALUE;
             self->in .ioc = INVALID_HANDLE_VALUE;
             return true_t;
@@ -88,16 +78,8 @@ bool_t
             return false_t;
 }
 
-bool_t
-    file_create
-        (file* par, str* par_name)                          {
-            if (trait_of(par_name) != str_t)  return false_t;
-            if (trait_of(par)      != file_t) return false_t;
-            return file_create_cstr(par, str_ptr(par_name));
-}
-
 bool_t 
-    file_create_cstr
+    file_new
         (file* self, const char* name)                  {
             if (trait_of(self) != file_t) return false_t;
             if (!name)                    return false_t;
@@ -114,8 +96,8 @@ bool_t
             );
 
             if (self->dev == INVALID_HANDLE_VALUE) goto err;
-            if (!out_open_cstr(&self->out, name))  goto err;
-            if (!in_open_cstr (&self->in , name))  goto err;
+            if (!out_open (&self->out, name))      goto err;
+            if (!in_open  (&self->in , name))      goto err;
             return true_t;
     err:    out_close (&self->out);
             in_close  (&self->in) ;
@@ -126,10 +108,15 @@ void
     file_close
         (file* self)               {
             CloseHandle (self->dev);
-            del (&self->out);
-            del (&self->in) ;
+            CloseHandle (self->ioc);
 
+            self->out.ioc = INVALID_HANDLE_VALUE;
+            self->in .ioc = INVALID_HANDLE_VALUE;
             self->dev = INVALID_HANDLE_VALUE;
+            self->ioc = INVALID_HANDLE_VALUE;
+
+            out_close(&self->out);
+            in_close (&self->in) ;
 }
 
 fut*
@@ -179,7 +166,7 @@ u64_t
 }
 
 bool_t 
-    file_resize
+    file_trunc
         (file* self, u64_t len)                         {
             if (trait_of(self) != file_t) return false_t;
             u64_t lo = len & mask (32);

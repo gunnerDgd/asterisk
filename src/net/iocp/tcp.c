@@ -1,47 +1,47 @@
 #include "tcp.h"
 
-#include "../../io.h"
 #include "net.h"
 #include "v4.h"
 #include "v6.h"
 
-obj_trait tcp_trait	= make_trait (
-	tcp_new	   ,
-	tcp_clone  ,
-	null_t	   ,
-	tcp_del	   ,
-	sizeof(tcp),
-	null_t
-);
-
-obj_trait* tcp_t = &tcp_trait;
-
-bool_t 
-	tcp_new
-		(tcp* self, u32_t count, va_list arg)									   {
-			io_sched* sched = null_t; if (count > 0) sched = va_arg(arg, io_sched*);
-			if (trait_of(sched) != io_sched_t) sched = this_io_sched();
-			if (trait_of(sched) != io_sched_t) return false_t;
-			self->ioc   = null_t		;
-			self->tcp   = INVALID_SOCKET;
-			self->sched = ref(sched)    ;
-			self->flag  = 0			    ;
+static bool_t 
+	do_new
+		(tcp* self, u32_t count, va_list arg)							 {
+			io_run *run = null_t; if (count > 0) run = va_arg(arg, any_t);
+			if (trait_of(run) != io_run_t) run = this_io_run();
+			if (trait_of(run) != io_run_t) return false_t;
+			self->ioc  = null_t		   ;
+			self->tcp  = INVALID_SOCKET;
+			self->run  = ref(run)      ;
+			self->flag = 0			   ;
 			return true_t;
 }
 
-bool_t 
-	tcp_clone
-		(tcp* par, tcp* par_clone) {
+static bool_t 
+	do_clone
+		(tcp* self, tcp* clone) {
 			return false_t;
 }
 
-void
-	tcp_del
-		(tcp* par)				   {
-			closesocket(par->tcp)  ;
-			del		   (par->sched);
+static void
+	do_del
+		(tcp* self)				  {
+			closesocket(self->tcp);
+			del		   (self->run);
 			
 }
+
+static obj_trait 
+	do_obj = make_trait (
+		do_new     ,
+		do_clone   ,
+		null_t	   ,
+		do_del	   ,
+		sizeof(tcp),
+		null_t
+);
+
+obj_trait* tcp_t = &do_obj;
 
 bool_t 
 	tcp_open
@@ -63,9 +63,9 @@ bool_t
 
 			if (self->tcp == INVALID_SOCKET) return false_t;
 			self->ioc = CreateIoCompletionPort		       (
-				self->tcp	    ,
-				self->sched->hnd,
-				self->sched	    ,
+				self->tcp     ,
+				self->run->hnd,
+				self->run     ,
 				0
 			);
 
@@ -92,8 +92,8 @@ fut*
 				return 0;
 			}
 
-			io_res *ret = make(io_res) from (1, self->sched); if (trait_of(ret) != io_res_t) return 0;
-			bool_t  res = ConnectEx						    (
+			io_res *ret = make(io_res) from (1, self->run); if (trait_of(ret) != io_res_t) return null_t;
+			bool_t  res = ConnectEx						  (
 				self->tcp,
 				&arg->all,
 				arg->len ,
@@ -112,10 +112,10 @@ fut*
 
 void 
 	tcp_close
-		(tcp* par)				 {
-			closesocket(par->tcp);
-			par->ioc =  0;
-			par->tcp    = -1;
+		(tcp* self)				  {
+			closesocket(self->tcp);
+			self->ioc = null_t;
+			self->tcp = -1;
 }
 
 fut*
@@ -129,8 +129,8 @@ fut*
 				.len = len 
 			};
 			
-			io_res* ret = make (io_res) from (1, self->sched); if (trait_of(ret) != io_res_t) return 0;
-			i32_t   res = WSASend						     (
+			io_res* ret = make (io_res) from (1, self->run); if (trait_of(ret) != io_res_t) return 0;
+			i32_t   res = WSASend						   (
 				self->tcp ,
 				&iob      ,
 				1		  ,
@@ -162,8 +162,8 @@ fut*
 				.len = len 
 			};
 
-			io_res *ret = make (io_res) from (1, self->sched); if (trait_of(ret) != io_res_t) return 0;
-			i32_t   res = WSARecv							 (
+			io_res *ret = make (io_res) from (1, self->run); if (trait_of(ret) != io_res_t) return 0;
+			i32_t   res = WSARecv						   (
 				self->tcp  ,
 				&iob       ,
 				1		   ,

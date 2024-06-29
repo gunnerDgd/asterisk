@@ -1,21 +1,8 @@
 #include "vma.h"
-#include <Windows.h>
-
 #include "../../fs.h"
 
-obj_trait vma_trait = make_trait (
-    vma_new    ,
-    vma_clone  ,
-    null_t     ,
-    vma_del    ,
-    sizeof(vma),
-    null_t
-);
-
-obj_trait *vma_t = &vma_trait;
-
-bool_t 
-    vma_new  
+static bool_t 
+    do_new  
         (vma* self, u32_t count, va_list arg)                         {
             obj*  dev = null_t; if (count > 0) dev = va_arg(arg, any_t);
             u64_t len = 4 KB  ; if (count > 1) len = va_arg(arg, u64_t);
@@ -46,20 +33,32 @@ bool_t
             return true_t;
 }
 
-bool_t 
-    vma_clone
+static bool_t 
+    do_clone
         (vma* self, vma* clone) {
             return false_t;
 }
 
-void   
-    vma_del  
+static void
+    do_del  
         (vma* self)                                  {
             if (self->ptr) UnmapViewOfFile(self->ptr);
             CloseHandle (self->map);
             del         (self->dev);
             
 }
+
+static obj_trait 
+    do_obj = make_trait (
+        do_new     ,
+        do_clone   ,
+        null_t     ,
+        do_del     ,
+        sizeof(vma),
+        null_t
+);
+
+obj_trait* vma_t = &do_obj;
 
 bool_t 
     vma_sync 

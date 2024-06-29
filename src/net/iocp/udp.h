@@ -1,23 +1,17 @@
-#ifndef __NET_IOCP_UDP_H__
-#define __NET_IOCP_UDP_H__
+#ifndef NET_IOCP_UDP_H
+#define NET_IOCP_UDP_H
 
+#include "../../io.h"
 #include "end.h"
-#include <core.h>
-
-struct io_sched;
 
 extern obj_trait* udp_t;
-typedef struct    udp     {
-    obj              head ;
-    struct io_sched *sched;
-    u32_t            flag;
-    any_t            ioc;
-    any_t            udp;
+typedef struct    udp  {
+    obj     head;
+    u32_t   flag;
+    io_run* run;
+    any_t   ioc;
+    any_t   udp;
 }   udp;
-
-bool_t udp_new      (udp*, u32_t, va_list)    ;
-bool_t udp_clone    (udp*, udp*)              ;
-void   udp_del      (udp*)                    ;
 
 bool_t udp_open     (udp*, obj_trait*)        ;
 bool_t udp_conn     (udp*, end*)              ;
