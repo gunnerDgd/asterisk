@@ -7,13 +7,10 @@ use        (
     dep (fs)
 )
 
-run_async()                          {
-    file *back = make (file) from (0);
-    if (!file_create_cstr(back, "backup.txt"))
-    if (!file_open_cstr  (back, "backup.txt"))
-        return 0;
+run_async()                            {
+    file *back = new_file ("./vma.txt");
 
-    file_resize (back, 4 KB);
+    file_trunc(back, 4 KB);
     vma* va = make (vma) from (2, back, 4 KB);
     println("VMA : %08x\n", vma_ptr(va));
 

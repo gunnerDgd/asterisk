@@ -7,17 +7,13 @@ use         (
     dep(io)
 )
 
-run_async()                                                  {
-    end  *end_1  = make (end)  from (2, make_v4_int(0), 6500);
-    acpt *acpt_1 = make (acpt) from (0);
+run_async()                       {
+    v4  *v4_1  = new_v4("0.0.0.0");
+    end *end_1 = make (end) from (2, v4_1, 6500);
+    acp *acp_1 = new_acp(end_1, tcp_t);
 
-    if (!acpt_open (acpt_1, end_1, tcp_t))  {
-        println ("Faiiled to Open Acceptor");
-        return 1;
-    }
-
-    while(true_t)                         {
-        tcp *cli = await(acpt_fut(acpt_1));
+    while(true_t)                       {
+        tcp *cli = await(acp_fut(acp_1));
         if (!cli)                                 {
             println("Failed to Accept Connection");
             return 0;
@@ -29,6 +25,6 @@ run_async()                                                  {
         del(cli);
     }
 
-    del(acpt_1);
-    del(end_1) ;
+    del(acp_1);
+    del(end_1);
 }

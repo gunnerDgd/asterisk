@@ -7,9 +7,10 @@ use        (
     dep (net)
 )
 
-run_async()                                                {
-    end  *end_1 = make (end) from (2, make_v4_int(0), 6500);
-    udp  *udp_1 = make (udp) from (0)                      ;
+run_async()                          {
+    v4   *v4_1  = new_v4("127.0.0.1");
+    end  *end_1 = make (end) from (2, v4_1, 6500);
+    udp  *udp_1 = make (udp) from (0);
     u8_t *buf   = new  (u8_t[64]);
     mem_set(buf, 0x00, 64);
     if (!udp_conn(udp_1, end_1)) {
@@ -26,4 +27,5 @@ run_async()                                                {
     drop(buf);
     del (udp_1);
     del (end_1);
+    del (v4_1);
 }

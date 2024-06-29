@@ -7,9 +7,10 @@ use        (
     dep(io)
 )
 
-run_async()                                                          {
-    end *end_1 = make (end) from (2, make_v4_cstr("127.0.0.1"), 6500);
-    tcp *tcp_1 = make (tcp) from (0);
+run_async()                         {
+    v4  *v4_1  = new_v4("127.0.0.1");
+    end *end_1 = make (end) from (2, v4_1, 6500);
+    tcp *tcp_1 = new_tcp(v4_t);
     if (!tcp_1) return 0;
     if (!end_1) return 0;
 
