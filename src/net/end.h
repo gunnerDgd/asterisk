@@ -1,5 +1,5 @@
-#ifndef __NET_END_H__
-#define __NET_END_H__
+#ifndef NET_END_H
+#define NET_END_H
 
 #ifdef PRESET_WIN32
 #include "iocp/end.h"

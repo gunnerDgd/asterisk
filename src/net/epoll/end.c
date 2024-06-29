@@ -2,30 +2,16 @@
 #include "v4.h"
 #include "v6.h"
 
-obj_trait end_trait = make_trait (
-    end_new    ,
-    end_clone  ,
-    null_t     ,
-    end_del    ,
-    sizeof(end),
-    null_t
-);
-
-obj_trait* end_t = &end_trait;
-
-bool_t
-    end_new
+static bool_t
+    do_new
         (end* self, u32_t count, va_list arg)                       {
             obj*  addr = 0; if (count > 0) addr = va_arg(arg, any_t);
             u16_t port = 0; if (count > 1) port = va_arg(arg, u32_t);
-            if (count == 0)                                         {
-                self->len = sizeof(self->all);
-                self->af  = AF_UNSPEC        ;
-                return true_t ;
-            }
 
             if (trait_of(addr) == v4_t) goto v4;
             if (trait_of(addr) == v6_t) goto v6;
+            self->len = sizeof(self->all);
+            self->af  = AF_UNSPEC        ;
             return false_t;
     v4:     self->v4.sin_family = AF_INET         ;
             self->v4.sin_addr   = ((v4*)addr)->v4 ;
@@ -39,18 +25,30 @@ bool_t
             return true_t;
 }
 
-bool_t
-    end_clone
+static bool_t
+    do_clone
         (end* par, end* par_clone)   {
             par->all = par_clone->all;
             par->len = par_clone->len;
             return true_t;
 }
 
-void
-    end_del
+static void
+    do_del
         (end* par) {
 }
+
+static obj_trait
+    do_end = make_trait (
+        do_new     ,
+        do_clone   ,
+        null_t     ,
+        do_del     ,
+        sizeof(end),
+        null_t
+);
+
+obj_trait* end_t = &do_end;
 
 struct v4*
     end_as_v4

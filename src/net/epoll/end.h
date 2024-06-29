@@ -1,5 +1,5 @@
-#ifndef __NET_EPOLL_END_H__
-#define __NET_EPOLL_END_H__
+#ifndef NET_EPOLL_END_H
+#define NET_EPOLL_END_H
 
 #include <core.h>
 #include <arpa/inet.h>
@@ -19,13 +19,9 @@ typedef struct    end       {
     };
 }   end;
 
-bool_t     end_new  (end*, u32_t, va_list);
-bool_t     end_clone(end*, end*)          ;
-void       end_del  (end*)                ;
-
-struct v4* end_as_v4(end*);
-struct v6* end_as_v6(end*);
-u16_t      end_port (end*);
-obj_trait* end_af   (end*);
+struct v4* end_v4    (end*);
+struct v6* end_v6    (end*);
+u16_t      end_port  (end*);
+obj_trait* end_af    (end*);
 
 #endif
