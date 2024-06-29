@@ -33,8 +33,8 @@ endif ()
 
 if   (WIN32)
     add_library(asterisk-io STATIC
-        iocp/io_sched.h
-        iocp/io_sched.c
+            iocp/io_run.h
+            iocp/io_run.c
 
         iocp/io_res.h
         iocp/io_res.c

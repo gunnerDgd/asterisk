@@ -25,7 +25,7 @@ if (UNIX AND NOT APPLE)
         epoll/v6.c
 
         end.h
-            acp.h
+        acp.h
         tcp.h
         udp.h
         v4.h
@@ -39,7 +39,7 @@ if (UNIX AND NOT APPLE)
     add_library(asterisk-net-include STATIC
         ../../include/net.h
         ../../include/net/end.h
-            ../../include/net/acp.h
+        ../../include/net/acp.h
         ../../include/net/tcp.h
         ../../include/net/udp.h
         ../../include/net/v6.h
@@ -61,11 +61,11 @@ if (WIN32)
         iocp/tcp.h
         iocp/tcp.c
 
-        iocp/acpt.h
-        iocp/acpt.c
+        iocp/acp.h
+        iocp/acp.c
 
-        iocp/acpt/tcp.h
-        iocp/acpt/tcp.c
+        iocp/acp/tcp.h
+        iocp/acp/tcp.c
 
         iocp/udp.h
         iocp/udp.c
@@ -77,19 +77,21 @@ if (WIN32)
         iocp/v6.c
 
         end.h
-            acp.h
+        acp.h
         tcp.h
         udp.h
         v4.h
         v6.h
 
         ../net.h
+        ../net.c
+        net.h
     )
 
     add_library(asterisk-net-include STATIC
         ../../include/net.h
         ../../include/net/end.h
-            ../../include/net/acp.h
+        ../../include/net/acp.h
         ../../include/net/tcp.h
         ../../include/net/udp.h
         ../../include/net/v6.h
