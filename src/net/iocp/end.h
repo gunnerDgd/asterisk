@@ -1,5 +1,5 @@
-#ifndef __NET_IOCP_END_H__
-#define __NET_IOCP_END_H__
+#ifndef NET_IOCP_END_H
+#define NET_IOCP_END_H
 
 #include "net.h"
 
@@ -15,15 +15,12 @@ typedef struct    end       {
     };
 }   end;
 
-bool_t end_new  (end*, u32_t, va_list);
-bool_t end_clone(end*, end*)          ;
-void   end_del  (end*)                ;
 
 struct v4;
 struct v6;
-struct v4* end_as_v4(end*);
-struct v6* end_as_v6(end*);
-u16_t      end_port (end*);
-obj_trait* end_af   (end*);
+struct v4* end_v4  (end*);
+struct v6* end_v6  (end*);
+u16_t      end_port(end*);
+obj_trait* end_af  (end*);
 
 #endif
