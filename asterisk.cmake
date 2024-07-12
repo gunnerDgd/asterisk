@@ -1,4 +1,4 @@
-if   (NOT PRESET_FEATURE_THREAD)
+if   (NOT CRISP_THREAD)
     message("[asterisk] asterisk requires \"thread\" feature of crisp.")
     message(SEND_ERROR)
 endif()
