@@ -23,9 +23,10 @@ bool_t
 
             self->stat = fut_pend;
             self->dev  = ref(dev);
-            self->buf  = buf     ;
-            self->len  = len     ;
-            self->arg  = arg     ;
+            self->buf  = buf;
+            self->len  = len;
+            self->arg  = arg;
+            self->ret  = 0;
             return true_t;
 }
 
