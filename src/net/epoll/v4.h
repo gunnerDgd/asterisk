@@ -12,7 +12,4 @@ typedef struct    v4   {
     struct in_addr v4  ;
 }   v4;
 
-u32_t v4_int(v4*);
-str*  v4_str(v4*);
-
 #endif

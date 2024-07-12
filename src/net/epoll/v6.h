@@ -12,6 +12,4 @@ typedef struct    v6    {
     struct in6_addr v6  ;
 }   v6;
 
-str* v6_str(v6*);
-
 #endif
