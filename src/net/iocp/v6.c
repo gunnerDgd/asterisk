@@ -1,5 +1,44 @@
 #include "v6.h"
 
+static str*
+    do_as
+        (v6* self, obj_trait* trait)                 {
+            if (trait_of(self) != v6_t) return null_t;
+            if (trait != str_t)         return null_t;
+            str *ret = make (str) from (0);
+
+            str_prep_back(ret, 64);
+            inet_ntop             (
+                AF_INET6    ,
+                &self->v6   ,
+                str_ptr(ret),
+                64
+            );
+
+            return ret;
+}
+
+static cast
+    do_cast = make_cast (
+        do_as ,
+        null_t,
+        null_t,
+        null_t,
+        null_t,
+        null_t,
+        null_t,
+        null_t,
+        null_t,
+        null_t,
+        null_t,
+        null_t
+);
+
+static obj_ops
+    do_ops    =          {
+        .cast = &do_cast
+};
+
 static bool_t
     do_new
         (v6* self, u32_t count, va_list arg) {
@@ -26,18 +65,7 @@ static obj_trait
         null_t    ,
         do_del    ,
         sizeof(v6),
-        null_t
+        &do_ops
 );
 
 obj_trait* v6_t = &do_obj;
-
-str*
-    v6_str
-        (v6* self)                                                                     {
-            if (trait_of (self) != v6_t)  return null_t; str *ret = make (str) from (0);
-            if (trait_of (ret)  != str_t) return null_t;
-            str_prep_back(ret, 64);
-
-            inet_ntop(AF_INET6, &self->v6, str_ptr(ret), 64);
-            return ret;
-}
